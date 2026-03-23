@@ -9,7 +9,7 @@ import {
   X,
   ChevronDown
 } from 'lucide-react'
-import { useAuth } from '../../hooks/useAuth.js'
+import { useAuth } from '../../hooks/useAuth.jsx'
 
 export const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)

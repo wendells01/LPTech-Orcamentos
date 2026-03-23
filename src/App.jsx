@@ -1,7 +1,7 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './hooks/useAuth.js'
-import { ProtectedRoute } from './components/layout/ProtectedRoute.js'
+import { AuthProvider } from './hooks/useAuth.jsx'
+import { ProtectedRoute } from './components/layout/ProtectedRoute.jsx'
 import { AdminLayout } from './components/layout/AdminLayout.jsx'
 
 // Pages
