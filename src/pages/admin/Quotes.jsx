@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Eye, Trash2, FileText } from 'lucide-react'
-import { getQuotes, deleteQuote } from '../../lib/supabase/queries.js'
+import { getQuotes, deleteQuote, getClients } from '../../lib/firebase/queries.js'
 import { QUOTE_STATUS } from '../../lib/constants/quoteStatus.js'
 import { formatCurrency, formatDate, truncateText } from '../../lib/utils/formatters.js'
 import { Button } from '../../components/common/Button.jsx'
@@ -25,18 +25,41 @@ export const Quotes = () => {
   const fetchQuotes = async () => {
     setLoading(true)
     try {
-      const { data, error } = await getQuotes({
-        search: search || undefined,
-        status: selectedStatuses.length > 0 ? selectedStatuses : undefined,
+      // Fetch quotes and clients separately
+      const [quotesData, clientsData] = await Promise.all([
+        getQuotes({
+          status: selectedStatuses.length > 0 ? selectedStatuses : undefined,
+        }),
+        getClients()
+      ])
+
+      // Create a map of clients for quick lookup
+      const clientsMap = {}
+      clientsData.forEach(client => {
+        clientsMap[client.id] = client
       })
 
-      if (error) {
-        console.error('Error fetching quotes:', error)
-      } else {
-        setQuotes(data || [])
+      // Attach client data to each quote
+      const quotesWithClients = quotesData.map(quote => ({
+        ...quote,
+        client: clientsMap[quote.client_id] || null
+      }))
+
+      // Apply search filter client-side if provided
+      let filteredQuotes = quotesWithClients
+      if (search) {
+        const searchLower = search.toLowerCase()
+        filteredQuotes = quotesWithClients.filter(q =>
+          (q.description?.toLowerCase() || '').includes(searchLower) ||
+          ((q.client?.name || '').toLowerCase().includes(searchLower)) ||
+          ((q.client?.company_name || '').toLowerCase().includes(searchLower))
+        )
       }
+
+      setQuotes(filteredQuotes)
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error fetching quotes:', error)
+      setQuotes([])
     } finally {
       setLoading(false)
     }
@@ -45,15 +68,11 @@ export const Quotes = () => {
   const handleDelete = async (quoteId, quoteNumber) => {
     setDeleting(true)
     try {
-      const { error } = await deleteQuote(quoteId)
-
-      if (error) {
-        alert(`Erro ao excluir orçamento: ${error.message}`)
-      } else {
-        setQuotes(quotes.filter(q => q.id !== quoteId))
-        alert(`Orçamento ${quoteNumber} excluído com sucesso!`)
-      }
+      await deleteQuote(quoteId)
+      setQuotes(quotes.filter(q => q.id !== quoteId))
+      alert(`Orçamento ${quoteNumber} excluído com sucesso!`)
     } catch (error) {
+      console.error('Delete error:', error)
       alert('Erro ao excluir orçamento')
     } finally {
       setDeleting(false)

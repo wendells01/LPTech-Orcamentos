@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { LogIn } from 'lucide-react'
-import { login } from '../../lib/supabase/auth.js'
+import { login } from '../../lib/firebase/auth.js'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import { Button } from '../../components/common/Button.jsx'
 import { Input } from '../../components/common/Input.jsx'
@@ -92,7 +92,7 @@ export const Login = () => {
 
           <div className="text-center">
             <p className="text-xs text-gray-500">
-              Use as credenciais do Supabase Auth para acessar o sistema.
+              Use as credenciais do Firebase Auth para acessar o sistema.
             </p>
           </div>
         </form>

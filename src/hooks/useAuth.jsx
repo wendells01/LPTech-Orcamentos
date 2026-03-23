@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, createContext } from 'react'
-import { subscribeToAuthChanges, getSession, logout as logoutService } from '../lib/supabase/auth.js'
+import { subscribeToAuthChanges, getSession, logout as logoutService } from '../lib/firebase/auth.js'
 
 const AuthContext = createContext(null)
 
@@ -10,16 +10,16 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check initial session
     getSession().then(session => {
-      setUser(session?.user ?? null)
+      setUser(session ?? null)
       setLoading(false)
     })
 
     // Subscribe to auth changes
-    const { data: { subscription } } = subscribeToAuthChanges((event, session) => {
-      setUser(session?.user ?? null)
+    const unsubscribe = subscribeToAuthChanges((event, session) => {
+      setUser(session ?? null)
     })
 
-    return () => subscription.unsubscribe()
+    return () => unsubscribe()
   }, [])
 
   const logout = async () => {

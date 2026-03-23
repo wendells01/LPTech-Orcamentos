@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npm create:*)",
       "Bash(npx create-vite@latest orcamentos --template react)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm install:*)",
+      "Bash(sudo chown:*)"
     ]
   }
 }

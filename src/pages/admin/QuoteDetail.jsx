@@ -12,7 +12,15 @@ import {
   FileText,
   Calendar
 } from 'lucide-react'
-import { getQuote, createQuoteItem, updateQuoteItem, deleteQuoteItem, updateQuote, createQuote, getClients } from '../../lib/supabase/queries.js'
+import {
+  getQuote,
+  createQuote,
+  createQuoteItem,
+  updateQuoteItem,
+  deleteQuoteItem,
+  updateQuote,
+  getClients
+} from '../../lib/firebase/queries.js'
 import { QUOTE_STATUS, STATUS_OPTIONS } from '../../lib/constants/quoteStatus.js'
 import { ITEM_TYPE_OPTIONS } from '../../lib/constants/itemTypes.js'
 import { formatCurrency, formatDate } from '../../lib/utils/formatters.js'
@@ -31,6 +39,7 @@ export const QuoteDetail = () => {
   const [saving, setSaving] = useState(false)
   const [deletingItem, setDeletingItem] = useState(null)
   const [clients, setClients] = useState([])
+  const [error, setError] = useState(null)
 
   // Quote data
   const [quote, setQuote] = useState({
@@ -62,26 +71,25 @@ export const QuoteDetail = () => {
   useEffect(() => {
     if (!isNew) {
       loadQuote()
-    } else {
-      // For new quote, get clients for select
-      loadClients()
     }
+    // Always load clients for the select dropdown
+    loadClients()
   }, [id])
 
   const loadQuote = async () => {
     try {
-      const { data, error } = await getQuote(id)
-      if (error) {
-        alert('Erro ao carregar orçamento')
+      const data = await getQuote(id)
+      if (!data) {
+        alert('Orçamento não encontrado')
         navigate('/admin/orcamentos')
         return
       }
       setQuote({
         quote_number: data.quote_number,
-        client_id: data.client_id,
+        client_id: data.client_id || '',
         description: data.description || '',
         status: data.status,
-        issue_date: data.issue_date,
+        issue_date: data.issue_date || new Date().toISOString().split('T')[0],
         valid_until: data.valid_until || '',
         discount: Number(data.discount) || 0,
         notes: data.notes || '',
@@ -92,6 +100,8 @@ export const QuoteDetail = () => {
       setItems(data.items || [])
     } catch (error) {
       console.error('Error:', error)
+      alert('Erro ao carregar orçamento')
+      navigate('/admin/orcamentos')
     } finally {
       setLoading(false)
     }
@@ -99,7 +109,7 @@ export const QuoteDetail = () => {
 
   const loadClients = async () => {
     try {
-      const { data } = await getClients()
+      const data = await getClients()
       setClients(data || [])
     } catch (error) {
       console.error('Error loading clients:', error)
@@ -132,9 +142,9 @@ export const QuoteDetail = () => {
 
     try {
       if (isNew) {
-        // First create the quote to get its ID
+        // First create the quote to get its ID if it doesn't exist
         if (!quote.id) {
-          const { data: newQuote, error: quoteError } = await createQuote({
+          const newQuote = await createQuote({
             client_id: quote.client_id,
             description: quote.description,
             status: quote.status,
@@ -143,25 +153,19 @@ export const QuoteDetail = () => {
             discount: quote.discount,
             notes: quote.notes,
           })
-
-          if (quoteError) throw quoteError
           setQuote(prev => ({ ...prev, id: newQuote.id, quote_number: newQuote.quote_number }))
         }
 
-        const { data, error } = await createQuoteItem({
-          quote_id: quote.id,
+        const { data } = await createQuoteItem(quote.id, {
           ...newItem,
+          total: newItem.quantity * newItem.unit_price,
         })
-
-        if (error) throw error
         setItems(prev => [...prev, data])
       } else {
-        const { data, error } = await createQuoteItem({
-          quote_id: id,
+        const { data } = await createQuoteItem(id, {
           ...newItem,
+          total: newItem.quantity * newItem.unit_price,
         })
-
-        if (error) throw error
         setItems(prev => [...prev, data])
       }
 
@@ -185,8 +189,16 @@ export const QuoteDetail = () => {
     ))
 
     try {
-      const { error } = await updateQuoteItem(itemId, { [field]: value })
-      if (error) throw error
+      const updates = { [field]: value }
+      // Recalculate total if quantity or unit_price changed
+      if (field === 'quantity' || field === 'unit_price') {
+        const item = items.find(i => i.id === itemId)
+        const quantity = field === 'quantity' ? value : Number(item.quantity)
+        const unitPrice = field === 'unit_price' ? value : Number(item.unit_price)
+        updates.total = quantity * unitPrice
+      }
+
+      await updateQuoteItem(isNew ? quote.id : id, itemId, updates)
     } catch (error) {
       alert(`Erro ao atualizar item: ${error.message}`)
       // Could revert to previous value here
@@ -196,8 +208,7 @@ export const QuoteDetail = () => {
   const handleDeleteItem = async (itemId) => {
     setDeletingItem(itemId)
     try {
-      const { error } = await deleteQuoteItem(itemId)
-      if (error) throw error
+      await deleteQuoteItem(isNew ? quote.id : id, itemId)
       setItems(prev => prev.filter(item => item.id !== itemId))
     } catch (error) {
       alert(`Erro ao excluir item: ${error.message}`)
@@ -216,7 +227,7 @@ export const QuoteDetail = () => {
     try {
       if (isNew) {
         if (!quote.id) {
-          const { data, error } = await createQuote({
+          const data = await createQuote({
             client_id: quote.client_id,
             description: quote.description,
             status: quote.status,
@@ -225,13 +236,11 @@ export const QuoteDetail = () => {
             discount: quote.discount,
             notes: quote.notes,
           })
-
-          if (error) throw error
           setQuote(prev => ({ ...prev, id: data.id, quote_number: data.quote_number }))
           alert(`Orçamento ${data.quote_number} criado com sucesso!`)
         }
       } else {
-        const { error } = await updateQuote(id, {
+        await updateQuote(id, {
           client_id: quote.client_id,
           description: quote.description,
           status: quote.status,
@@ -240,8 +249,6 @@ export const QuoteDetail = () => {
           discount: quote.discount,
           notes: quote.notes,
         })
-
-        if (error) throw error
         alert('Orçamento salvo com sucesso!')
       }
     } catch (error) {

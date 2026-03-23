@@ -1,0 +1,95 @@
+{
+  "collections": {
+    "clients": {
+      "fields": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "phone": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        },
+        "updatedAt": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "quotes": {
+      "fields": {
+        "quote_number": {
+          "type": "string",
+          "required": true
+        },
+        "client_id": {
+          "type": "reference",
+          "target": "clients"
+        },
+        "status": {
+          "type": "enum",
+          "values": ["negotiation", "approved", "execution", "finished", "lost"]
+        },
+        "description": {
+          "type": "string"
+        },
+        "discount": {
+          "type": "number",
+          "default": 0
+        },
+        "total": {
+          "type": "number"
+        },
+        "issue_date": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        },
+        "updatedAt": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "quote_items": {
+      "fields": {
+        "quote_id": {
+          "type": "reference",
+          "target": "quotes"
+        },
+        "type": {
+          "type": "enum",
+          "values": ["service", "material"]
+        },
+        "description": {
+          "type": "string",
+          "required": true
+        },
+        "quantity": {
+          "type": "number",
+          "required": true
+        },
+        "unitPrice": {
+          "type": "number",
+          "required": true
+        },
+        "total": {
+          "type": "number"
+        },
+        "display_order": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        }
+      }
+    }
+  }
+}

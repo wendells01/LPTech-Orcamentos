@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { FileText, Users, TrendingUp, Clock, CheckCircle, AlertCircle, XCircle, Play } from 'lucide-react'
-import { supabase } from '../../lib/supabase/client.js'
+import { getQuotes, getClients } from '../../lib/firebase/queries.js'
 import { QUOTE_STATUS } from '../../lib/constants/quoteStatus.js'
 import { formatCurrency } from '../../lib/utils/formatters.js'
 import { Spinner } from '../../components/common/Spinner.jsx'
@@ -22,56 +22,46 @@ export const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Total de orçamentos
-      const { count: quotesCount } = await supabase
-        .from('quotes')
-        .select('*', { count: 'exact', head: true })
+      // Buscar todos os quotes (para contar e analisar)
+      const allQuotes = await getQuotes()
+      const allClients = await getClients()
 
-      // Total de clientes
-      const { count: clientsCount } = await supabase
-        .from('clients')
-        .select('*', { count: 'exact', head: true })
+      // Total de orçamentos e clientes
+      const totalQuotes = allQuotes.length
+      const totalClients = allClients.length
 
-      // Orçamentos por status
-      const { data: quotesByStatus } = await supabase
-        .from('quotes')
-        .select('status')
-
-      // Valor total de orçamentos aprovados/em execução
-      const { data: approvedQuotes } = await supabase
-        .from('quotes')
-        .select('total')
-        .in('status', ['aprovado', 'execução', 'finalizado'])
-
-      // Últimos 5 orçamentos
-      const { data: recentQuotes } = await supabase
-        .from('quotes')
-        .select(`
-          *,
-          client:clients(name, company_name)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      // Processar contagem por status
+      // Contagem por status
       const statusCounts = {}
       QUOTE_STATUS.forEach(s => {
         statusCounts[s.value] = 0
       })
-      quotesByStatus?.forEach(q => {
+      allQuotes.forEach(q => {
         if (statusCounts[q.status] !== undefined) {
           statusCounts[q.status]++
         }
       })
 
-      // Calcular valor total
-      const totalValue = approvedQuotes?.reduce((sum, q) => sum + Number(q.total), 0) || 0
+      // Valor total de orçamentos aprovados/em execução/finalizados
+      const approvedQuotes = allQuotes.filter(q =>
+        ['aprovado', 'execução', 'finalizado'].includes(q.status)
+      )
+      const totalValue = approvedQuotes.reduce((sum, q) => sum + Number(q.total), 0)
+
+      // Últimos 5 orçamentos (já estão ordenados por createdAt desc)
+      const recentQuotes = allQuotes.slice(0, 5).map(q => {
+        // Buscar cliente (simplificado - idealmente já viria aninhado)
+        const client = allClients.find(c => c.id === q.client_id)
+        return {
+          ...q,
+          client: client ? { name: client.name, company_name: client.company_name } : null
+        }
+      })
 
       setStats({
-        totalQuotes: quotesCount || 0,
-        totalClients: clientsCount || 0,
+        totalQuotes,
+        totalClients,
         quotesByStatus: statusCounts,
-        recentQuotes: recentQuotes || [],
+        recentQuotes,
         totalValue,
       })
     } catch (error) {

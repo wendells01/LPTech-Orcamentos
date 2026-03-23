@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getClients } from '../../lib/supabase/queries.js'
+import { getClients } from '../../lib/firebase/queries.js'
 
 export const ClientSelect = ({ value, onChange, error }) => {
   const [clients, setClients] = useState([])
@@ -11,7 +11,7 @@ export const ClientSelect = ({ value, onChange, error }) => {
 
   const loadClients = async () => {
     try {
-      const { data } = await getClients()
+      const data = await getClients()
       setClients(data || [])
     } catch (error) {
       console.error('Error loading clients:', error)
