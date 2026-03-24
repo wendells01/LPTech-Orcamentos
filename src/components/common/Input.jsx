@@ -15,23 +15,23 @@ export const Input = ({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-slate-300 mb-1"
         >
           {label}
         </label>
       )}
       <input
         id={inputId}
-        className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
-          error ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : ''
+        className={`block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm ${
+          error ? 'border-red-500 text-red-400 focus:border-red-400 focus:ring-red-400' : ''
         }`}
         {...props}
       />
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1 text-sm text-red-400">{error}</p>
       )}
       {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
+        <p className="mt-1 text-sm text-slate-400">{helperText}</p>
       )}
     </div>
   )
@@ -52,24 +52,24 @@ export const Textarea = ({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-slate-300 mb-1"
         >
           {label}
         </label>
       )}
       <textarea
         id={inputId}
-        className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
-          error ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : ''
+        className={`block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm ${
+          error ? 'border-red-500 text-red-400 focus:border-red-400 focus:ring-red-400' : ''
         }`}
         rows={3}
         {...props}
       />
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1 text-sm text-red-400">{error}</p>
       )}
       {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
+        <p className="mt-1 text-sm text-slate-400">{helperText}</p>
       )}
     </div>
   )
@@ -91,25 +91,25 @@ export const Select = ({
       {label && (
         <label
           htmlFor={selectId}
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-slate-300 mb-1"
         >
           {label}
         </label>
       )}
       <select
         id={selectId}
-        className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
-          error ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : ''
+        className={`block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm ${
+          error ? 'border-red-500 text-red-400 focus:border-red-400 focus:ring-red-400' : ''
         }`}
         {...props}
       >
         {children}
       </select>
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1 text-sm text-red-400">{error}</p>
       )}
       {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
+        <p className="mt-1 text-sm text-slate-400">{helperText}</p>
       )}
     </div>
   )

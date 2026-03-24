@@ -9,6 +9,12 @@ import { Login } from './pages/admin/Login.jsx'
 import { Dashboard } from './pages/admin/Dashboard.jsx'
 import { Quotes } from './pages/admin/Quotes.jsx'
 import { QuoteDetail } from './pages/admin/QuoteDetail.jsx'
+import { Clients } from './pages/admin/Clients.jsx'
+import { ClientForm } from './pages/admin/ClientForm.jsx'
+import { Services } from './pages/admin/Services.jsx'
+import { ServiceForm } from './pages/admin/ServiceForm.jsx'
+import { Materials } from './pages/admin/Materials.jsx'
+import { MaterialForm } from './pages/admin/MaterialForm.jsx'
 
 function App() {
   return (
@@ -61,10 +67,63 @@ function App() {
         <Route path="/admin/clientes" element={
           <ProtectedRoute>
             <AdminLayout>
-              <div className="p-8">
-                <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-                <p className="text-gray-600 mt-2">Página de clientes - em desenvolvimento</p>
-              </div>
+              <Clients />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/clientes/novo" element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <ClientForm />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/clientes/:id" element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <ClientForm />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/servicos" element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <Services />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/servicos/novo" element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <ServiceForm />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/servicos/:id" element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <ServiceForm />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/materiais" element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <Materials />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/materiais/novo" element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <MaterialForm />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/materiais/:id" element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <MaterialForm />
             </AdminLayout>
           </ProtectedRoute>
         } />

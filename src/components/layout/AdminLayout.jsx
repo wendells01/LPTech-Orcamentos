@@ -7,7 +7,14 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  Plus,
+  Calendar,
+  ClipboardList,
+  Wrench,
+  Package,
+  UserCircle,
+  CreditCard
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth.jsx'
 
@@ -22,6 +29,56 @@ export const AdminLayout = ({ children }) => {
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Orçamentos', href: '/admin/orcamentos', icon: FileText },
     { name: 'Clientes', href: '/admin/clientes', icon: Users },
+  ]
+
+  const userMenuSections = [
+    {
+      title: 'Orçamentos',
+      items: [
+        { name: 'Add new quote', href: '/admin/orcamentos/novo', icon: Plus },
+        { name: 'Quotes list', href: '/admin/orcamentos', icon: FileText },
+      ]
+    },
+    {
+      title: 'Agenda',
+      items: [
+        { name: 'Add new appointment', href: '#', icon: Plus },
+        { name: 'Appointments', href: '#', icon: Calendar },
+      ]
+    },
+    {
+      title: 'Clientes',
+      items: [
+        { name: 'Add new client', href: '/admin/clientes/novo', icon: Plus },
+        { name: 'Clients list', href: '/admin/clientes', icon: Users },
+      ]
+    },
+    {
+      title: 'Serviços',
+      items: [
+        { name: 'Add new service', href: '/admin/servicos/novo', icon: Plus },
+        { name: 'Services list', href: '/admin/servicos', icon: Wrench },
+      ]
+    },
+    {
+      title: 'Materiais',
+      items: [
+        { name: 'Add new material', href: '/admin/materiais/novo', icon: Plus },
+        { name: 'Materials list', href: '/admin/materiais', icon: Package },
+      ]
+    },
+    {
+      title: 'Minha conta',
+      items: [
+        { name: 'Profile', href: '#', icon: UserCircle },
+      ]
+    },
+    {
+      title: 'Planos',
+      items: [
+        { name: 'View plans', href: '#', icon: CreditCard },
+      ]
+    },
   ]
 
   const isActive = (href) => {
@@ -40,15 +97,15 @@ export const AdminLayout = ({ children }) => {
   const userName = userEmail.split('@')[0]
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-slate-900">
       {/* Sidebar mobile */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
-          <div className="fixed inset-y-0 left-0 flex flex-col w-64 bg-white">
-            <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-              <span className="text-xl font-bold text-primary-600">Orçamentos</span>
-              <button onClick={() => setSidebarOpen(false)} className="text-gray-500 hover:text-gray-700">
+          <div className="fixed inset-0 bg-slate-800 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
+          <div className="fixed inset-y-0 left-0 flex flex-col w-64 bg-slate-800">
+            <div className="flex items-center justify-between h-16 px-4 border-b border-slate-700">
+              <span className="text-xl font-bold text-teal-400">LP Tecnologia</span>
+              <button onClick={() => setSidebarOpen(false)} className="text-slate-300 hover:text-white">
                 <X size={24} />
               </button>
             </div>
@@ -63,8 +120,8 @@ export const AdminLayout = ({ children }) => {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                       active
-                        ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-700'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-teal-600/20 text-teal-400 border-r-2 border-teal-400'
+                        : 'text-slate-300 hover:bg-slate-700'
                     }`}
                   >
                     <Icon className="mr-3 h-5 w-5" />
@@ -79,9 +136,9 @@ export const AdminLayout = ({ children }) => {
 
       {/* Sidebar desktop */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <div className="flex flex-col w-64 bg-white border-r border-gray-200">
-          <div className="flex items-center h-16 px-4 border-b border-gray-200">
-            <span className="text-xl font-bold text-primary-600">Orçamentos</span>
+        <div className="flex flex-col w-64 bg-slate-800 border-r border-slate-700">
+          <div className="flex items-center h-16 px-4 border-b border-slate-700">
+            <span className="text-xl font-bold text-teal-400">LP Tecnologia</span>
           </div>
           <nav className="flex-1 px-4 py-4 space-y-1">
             {navigation.map((item) => {
@@ -93,8 +150,8 @@ export const AdminLayout = ({ children }) => {
                   to={item.href}
                   className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     active
-                      ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-teal-600/20 text-teal-400 border-r-2 border-teal-400'
+                      : 'text-slate-300 hover:bg-slate-700'
                   }`}
                 >
                   <Icon className="mr-3 h-5 w-5" />
@@ -109,12 +166,12 @@ export const AdminLayout = ({ children }) => {
       {/* Main content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
+        <header className="bg-slate-800 shadow-sm border-b border-slate-700">
           <div className="flex items-center justify-between h-16 px-4">
             <div className="flex items-center">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden text-gray-500 hover:text-gray-700"
+                className="lg:hidden text-slate-300 hover:text-white"
               >
                 <Menu size={24} />
               </button>
@@ -124,10 +181,10 @@ export const AdminLayout = ({ children }) => {
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 focus:outline-none"
+                className="flex items-center space-x-2 text-sm text-slate-300 hover:text-white focus:outline-none"
               >
-                <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-                  <span className="text-primary-700 font-medium text-sm">
+                <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center">
+                  <span className="text-white font-medium text-sm">
                     {userName.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -136,18 +193,56 @@ export const AdminLayout = ({ children }) => {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 py-1 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">{userName}</p>
-                    <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+                <div className="absolute right-0 mt-2 w-72 py-2 bg-slate-700 rounded-md shadow-lg border border-slate-600 z-50 max-h-[80vh] overflow-y-auto">
+                  <div className="px-4 py-3 border-b border-slate-600">
+                    <p className="text-sm font-medium text-white">{userName}</p>
+                    <p className="text-xs text-slate-400 truncate">{userEmail}</p>
                   </div>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sair
-                  </button>
+
+                  {userMenuSections.map((section, idx) => (
+                    <div key={idx}>
+                      <p className="px-4 py-2 text-xs font-semibold text-teal-400 uppercase tracking-wider">
+                        {section.title}
+                      </p>
+                      {section.items.map((item, itemIdx) => {
+                        const Icon = item.icon
+                        const active = isActive(item.href)
+                        return (
+                          <Link
+                            key={itemIdx}
+                            to={item.href}
+                            onClick={() => {
+                              setUserMenuOpen(false)
+                              if (item.href !== '#') {
+                                // Navigate normally
+                              } else {
+                                // Placeholder - could show alert
+                                alert('Página em desenvolvimento')
+                              }
+                            }}
+                            className={`flex items-center px-4 py-2 text-sm ${
+                              active
+                                ? 'bg-teal-600/20 text-teal-400'
+                                : 'text-slate-300 hover:bg-slate-600'
+                            }`}
+                          >
+                            <Icon className="mr-3 h-4 w-4" />
+                            {item.name}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  ))}
+
+                  <div className="border-t border-slate-600 mt-2 pt-2">
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-4 py-2 text-sm text-slate-300 hover:bg-slate-600"
+                    >
+                      <LogOut className="mr-3 h-4 w-4" />
+                      Sair
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -155,7 +250,7 @@ export const AdminLayout = ({ children }) => {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-900">
           {children}
         </main>
       </div>

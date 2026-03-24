@@ -32,18 +32,18 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
       <div className="flex min-h-screen items-center justify-center p-4">
         {/* Overlay */}
         <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          className="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"
           onClick={onClose}
         ></div>
 
         {/* Modal */}
-        <div className={`relative bg-white rounded-lg shadow-xl w-full ${sizeStyles[size]} transform transition-all z-10`}>
+        <div className={`relative bg-slate-800 rounded-lg shadow-xl w-full ${sizeStyles[size]} transform transition-all z-10 border border-slate-700`}>
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <div className="flex items-center justify-between p-4 border-b border-slate-700">
+            <h3 className="text-lg font-semibold text-white">{title}</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              className="text-slate-400 hover:text-white focus:outline-none"
             >
               <X size={24} />
             </button>

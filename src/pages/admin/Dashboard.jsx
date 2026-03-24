@@ -84,12 +84,12 @@ export const Dashboard = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'negociação': return 'text-yellow-600 bg-yellow-50'
-      case 'aprovado': return 'text-green-600 bg-green-50'
-      case 'execução': return 'text-blue-600 bg-blue-50'
-      case 'finalizado': return 'text-gray-600 bg-gray-50'
-      case 'perdido': return 'text-red-600 bg-red-50'
-      default: return 'text-gray-600 bg-gray-50'
+      case 'negociação': return 'text-amber-400 bg-amber-500/20'
+      case 'aprovado': return 'text-teal-400 bg-teal-500/20'
+      case 'execução': return 'text-blue-400 bg-blue-500/20'
+      case 'finalizado': return 'text-slate-300 bg-slate-500/20'
+      case 'perdido': return 'text-red-400 bg-red-500/20'
+      default: return 'text-slate-300 bg-slate-500/20'
     }
   }
 
@@ -104,56 +104,56 @@ export const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Visão geral do seu negócio</p>
+        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <p className="text-slate-400 mt-1">Visão geral do seu negócio</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-100 rounded-lg">
-              <FileText className="h-6 w-6 text-primary-600" />
+            <div className="p-2 bg-teal-600/20 rounded-lg border border-teal-500/50">
+              <FileText className="h-6 w-6 text-teal-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total de Orçamentos</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalQuotes}</p>
+              <p className="text-sm font-medium text-slate-400">Total de Orçamentos</p>
+              <p className="text-2xl font-bold text-white">{stats.totalQuotes}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Users className="h-6 w-6 text-green-600" />
+            <div className="p-2 bg-teal-600/20 rounded-lg border border-teal-500/50">
+              <Users className="h-6 w-6 text-teal-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Clientes Cadastrados</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalClients}</p>
+              <p className="text-sm font-medium text-slate-400">Clientes Cadastrados</p>
+              <p className="text-2xl font-bold text-white">{stats.totalClients}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-blue-600" />
+            <div className="p-2 bg-blue-500/20 rounded-lg border border-blue-500/50">
+              <TrendingUp className="h-6 w-6 text-blue-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Valor Total Aprovado</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalValue)}</p>
+              <p className="text-sm font-medium text-slate-400">Valor Total Aprovado</p>
+              <p className="text-2xl font-bold text-white">{formatCurrency(stats.totalValue)}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <AlertCircle className="h-6 w-6 text-purple-600" />
+            <div className="p-2 bg-amber-500/20 rounded-lg border border-amber-500/50">
+              <AlertCircle className="h-6 w-6 text-amber-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Em Negociação</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.quotesByStatus['negociação'] || 0}</p>
+              <p className="text-sm font-medium text-slate-400">Em Negociação</p>
+              <p className="text-2xl font-bold text-white">{stats.quotesByStatus['negociação'] || 0}</p>
             </div>
           </div>
         </div>
@@ -161,18 +161,18 @@ export const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Status Summary */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Status dos Orçamentos</h2>
+        <div className="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700">
+          <h2 className="text-lg font-semibold text-white mb-4">Status dos Orçamentos</h2>
           <div className="space-y-3">
             {QUOTE_STATUS.map((status) => {
               const Icon = getStatusIcon(status.value)
               return (
                 <div key={status.value} className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Icon className="h-5 w-5 mr-3" style={{ color: status.color.split(' ')[1].replace('bg-', '').replace('-100', '') }} />
-                    <span className="text-sm font-medium text-gray-700">{status.label}</span>
+                    <Icon className="h-5 w-5 mr-3 text-teal-400" />
+                    <span className="text-sm font-medium text-slate-300">{status.label}</span>
                   </div>
-                  <span className="text-lg font-bold text-gray-900">{stats.quotesByStatus[status.value] || 0}</span>
+                  <span className="text-lg font-bold text-white">{stats.quotesByStatus[status.value] || 0}</span>
                 </div>
               )
             })}
@@ -180,16 +180,16 @@ export const Dashboard = () => {
         </div>
 
         {/* Recent Quotes */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Últimos Orçamentos</h2>
-            <Link to="/admin/orcamentos" className="text-sm text-primary-600 hover:text-primary-700">
+            <h2 className="text-lg font-semibold text-white">Últimos Orçamentos</h2>
+            <Link to="/admin/orcamentos" className="text-sm text-teal-400 hover:text-teal-300">
               Ver todos
             </Link>
           </div>
           <div className="space-y-3">
             {stats.recentQuotes.length === 0 ? (
-              <p className="text-sm text-gray-500">Nenhum orçamento cadastrado</p>
+              <p className="text-sm text-slate-400">Nenhum orçamento cadastrado</p>
             ) : (
               stats.recentQuotes.map((quote) => {
                 const statusConfig = QUOTE_STATUS.find(s => s.value === quote.status)
@@ -199,14 +199,14 @@ export const Dashboard = () => {
                   <Link
                     key={quote.id}
                     to={`/admin/orcamentos/${quote.id}`}
-                    className="flex items-center justify-between p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-md border border-slate-700 hover:bg-slate-700/50 transition-colors"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{quote.quote_number}</p>
-                      <p className="text-xs text-gray-500 truncate max-w-xs">{clientName}</p>
+                      <p className="text-sm font-medium text-white">{quote.quote_number}</p>
+                      <p className="text-xs text-slate-400 truncate max-w-xs">{clientName}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-gray-900">{formatCurrency(quote.total)}</p>
+                      <p className="text-sm font-bold text-teal-400">{formatCurrency(quote.total)}</p>
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${statusConfig.color}`}>
                         {statusConfig.label}
                       </span>
@@ -220,22 +220,22 @@ export const Dashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h2>
+      <div className="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700">
+        <h2 className="text-lg font-semibold text-white mb-4">Ações Rápidas</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
             to="/admin/orcamentos"
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex flex-col items-center p-4 border border-slate-700 rounded-lg hover:bg-slate-700/50 transition-colors"
           >
-            <FileText className="h-8 w-8 text-primary-600 mb-2" />
-            <span className="text-sm font-medium text-gray-700">Novo Orçamento</span>
+            <FileText className="h-8 w-8 text-teal-400 mb-2" />
+            <span className="text-sm font-medium text-slate-300">Novo Orçamento</span>
           </Link>
           <Link
             to="/admin/clientes"
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex flex-col items-center p-4 border border-slate-700 rounded-lg hover:bg-slate-700/50 transition-colors"
           >
-            <Users className="h-8 w-8 text-green-600 mb-2" />
-            <span className="text-sm font-medium text-gray-700">Cadastrar Cliente</span>
+            <Users className="h-8 w-8 text-teal-400 mb-2" />
+            <span className="text-sm font-medium text-slate-300">Cadastrar Cliente</span>
           </Link>
         </div>
       </div>

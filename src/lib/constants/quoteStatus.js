@@ -1,9 +1,9 @@
 export const QUOTE_STATUS = [
-  { value: 'negociação', label: 'Negociação', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'aprovado', label: 'Aprovado', color: 'bg-green-100 text-green-800' },
-  { value: 'execução', label: 'Em Execução', color: 'bg-blue-100 text-blue-800' },
-  { value: 'finalizado', label: 'Finalizado', color: 'bg-gray-100 text-gray-800' },
-  { value: 'perdido', label: 'Perdido', color: 'bg-red-100 text-red-800' },
+  { value: 'negociação', label: 'Negociação', color: 'bg-amber-500/20 text-amber-400 border border-amber-500/50' },
+  { value: 'aprovado', label: 'Aprovado', color: 'bg-teal-500/20 text-teal-400 border border-teal-500/50' },
+  { value: 'execução', label: 'Em Execução', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/50' },
+  { value: 'finalizado', label: 'Finalizado', color: 'bg-slate-500/20 text-slate-300 border border-slate-500/50' },
+  { value: 'perdido', label: 'Perdido', color: 'bg-red-500/20 text-red-400 border border-red-500/50' },
 ]
 
 export const getStatusConfig = (status) => {

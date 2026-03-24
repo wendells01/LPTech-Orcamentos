@@ -89,8 +89,8 @@ export const Quotes = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Orçamentos</h1>
-          <p className="text-gray-600 mt-1">Gerencie todos os orçamentos da empresa</p>
+          <h1 className="text-2xl font-bold text-white">Orçamentos</h1>
+          <p className="text-slate-400 mt-1">Gerencie todos os orçamentos da empresa</p>
         </div>
         <Link to="/admin/orcamentos/novo">
           <Button size="lg">
@@ -109,16 +109,16 @@ export const Quotes = () => {
       />
 
       {/* Table */}
-      <div className="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-slate-800 shadow-sm border border-slate-700 rounded-lg overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center p-12">
             <Spinner size="lg" />
           </div>
         ) : quotes.length === 0 ? (
           <div className="text-center py-12">
-            <FileText className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">Nenhum orçamento encontrado</h3>
-            <p className="mt-2 text-sm text-gray-500">
+            <FileText className="mx-auto h-12 w-12 text-slate-500" />
+            <h3 className="mt-4 text-lg font-medium text-white">Nenhum orçamento encontrado</h3>
+            <p className="mt-2 text-sm text-slate-400">
               {search || selectedStatuses.length > 0
                 ? 'Tente ajustar os filtros de busca.'
                 : 'Comece criando seu primeiro orçamento.'}
@@ -136,54 +136,54 @@ export const Quotes = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-slate-700">
+              <thead className="bg-slate-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                     Número
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                     Cliente
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                     Descrição
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                     Total
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                     Data
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-300 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-slate-800 divide-y divide-slate-700">
                 {quotes.map((quote) => {
                   const statusConfig = getStatusConfig(quote.status)
                   const clientName = quote.client?.company_name || quote.client?.name || 'Cliente não informado'
 
                   return (
-                    <tr key={quote.id} className="hover:bg-gray-50">
+                    <tr key={quote.id} className="hover:bg-slate-700/50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-white">
                           {quote.quote_number}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{clientName}</div>
+                        <div className="text-sm text-slate-200">{clientName}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate">
+                        <div className="text-sm text-slate-200 max-w-xs truncate">
                           {truncateText(quote.description, 60)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-teal-400">
                           {formatCurrency(quote.total)}
                         </div>
                       </td>
@@ -192,21 +192,21 @@ export const Quotes = () => {
                           {statusConfig.label}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
                         {formatDate(quote.issue_date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             to={`/admin/orcamentos/${quote.id}`}
-                            className="text-primary-600 hover:text-primary-900 p-1"
+                            className="text-teal-400 hover:text-teal-300 p-1"
                             title="Ver detalhes"
                           >
                             <Eye className="h-4 w-4" />
                           </Link>
                           <button
                             onClick={() => setDeleteConfirm(quote)}
-                            className="text-red-600 hover:text-red-900 p-1"
+                            className="text-red-400 hover:text-red-300 p-1"
                             title="Excluir"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -226,13 +226,13 @@ export const Quotes = () => {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setDeleteConfirm(null)}></div>
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full z-10 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="fixed inset-0 bg-slate-900 bg-opacity-75" onClick={() => setDeleteConfirm(null)}></div>
+            <div className="relative bg-slate-800 rounded-lg shadow-xl max-w-md w-full z-10 p-6 border border-slate-700">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 Confirmar Exclusão
               </h3>
-              <p className="text-sm text-gray-600 mb-6">
-                Tem certeza que deseja excluir o orçamento <strong>{deleteConfirm.quote_number}</strong>?<br />
+              <p className="text-sm text-slate-300 mb-6">
+                Tem certeza que deseja excluir o orçamento <strong className="text-white">{deleteConfirm.quote_number}</strong>?<br />
                 Esta ação não pode ser desfeita.
               </p>
               <div className="flex justify-end gap-3">

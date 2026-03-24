@@ -62,6 +62,76 @@ export const deleteClient = async (id: string) => {
   await deleteDoc(doc(db, 'quote_clients', id));
 };
 
+// Services collection operations
+export const getServices = async () => {
+  const q = query(collection(db, 'services'), orderBy('name'));
+  const snapshot = await getDocs(q);
+  return snapshotToArray(snapshot);
+};
+
+export const getService = async (id: string) => {
+  const docRef = doc(db, 'services', id);
+  const snapshot = await getDoc(docRef);
+  return snapshot.exists ? { id: docRef.id, ...snapshot.data() } : null;
+};
+
+export const createService = async (service: any) => {
+  const docRef = await addDoc(collection(db, 'services'), {
+    ...service,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return { id: docRef.id, ...service };
+};
+
+export const updateService = async (id: string, service: any) => {
+  const serviceRef = doc(db, 'services', id);
+  await updateDoc(serviceRef, {
+    ...service,
+    updatedAt: serverTimestamp(),
+  });
+  return { id, ...service };
+};
+
+export const deleteService = async (id: string) => {
+  await deleteDoc(doc(db, 'services', id));
+};
+
+// Materials collection operations
+export const getMaterials = async () => {
+  const q = query(collection(db, 'materials'), orderBy('name'));
+  const snapshot = await getDocs(q);
+  return snapshotToArray(snapshot);
+};
+
+export const getMaterial = async (id: string) => {
+  const docRef = doc(db, 'materials', id);
+  const snapshot = await getDoc(docRef);
+  return snapshot.exists ? { id: docRef.id, ...snapshot.data() } : null;
+};
+
+export const createMaterial = async (material: any) => {
+  const docRef = await addDoc(collection(db, 'materials'), {
+    ...material,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return { id: docRef.id, ...material };
+};
+
+export const updateMaterial = async (id: string, material: any) => {
+  const materialRef = doc(db, 'materials', id);
+  await updateDoc(materialRef, {
+    ...material,
+    updatedAt: serverTimestamp(),
+  });
+  return { id, ...material };
+};
+
+export const deleteMaterial = async (id: string) => {
+  await deleteDoc(doc(db, 'materials', id));
+};
+
 // Quote items operations (as a subcollection of quotes)
 export const getQuoteItems = async (quoteId: string) => {
   const q = query(

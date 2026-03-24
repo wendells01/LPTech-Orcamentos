@@ -41,20 +41,20 @@ export const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-primary-100 rounded-full flex items-center justify-center">
-            <LogIn className="h-8 w-8 text-primary-600" />
+          <div className="mx-auto h-16 w-16 bg-teal-600/20 rounded-full flex items-center justify-center border border-teal-500/50">
+            <LogIn className="h-8 w-8 text-teal-400" />
           </div>
-          <h2 className="mt-4 text-3xl font-bold text-gray-900">Sistema de Orçamentos</h2>
-          <p className="mt-2 text-sm text-gray-600">Faça login para acessar o painel admin</p>
+          <h2 className="mt-4 text-3xl font-bold text-white">LP Tecnologia</h2>
+          <p className="mt-2 text-sm text-slate-400">Sistema de Orçamentos</p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+            <div className="rounded-md bg-red-900/30 border border-red-700 p-4">
+              <div className="text-sm text-red-400">{error}</div>
             </div>
           )}
 
@@ -91,7 +91,7 @@ export const Login = () => {
           </Button>
 
           <div className="text-center">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               Use as credenciais do Firebase Auth para acessar o sistema.
             </p>
           </div>
