@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Save, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Save, AlertCircle, Bug } from 'lucide-react'
 import { getClient, createClient, updateClient } from '../../lib/firebase/queries.js'
 import { Button } from '../../components/common/Button.jsx'
 import { Input, Textarea } from '../../components/common/Input.jsx'
@@ -17,6 +17,7 @@ export const ClientForm = () => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [authError, setAuthError] = useState(null)
+  const [debugInfo, setDebugInfo] = useState(null)
 
   const [client, setClient] = useState({
     name: '',
@@ -28,6 +29,22 @@ export const ClientForm = () => {
     number: '',
     complement: '',
   })
+
+  // DEBUG: mostrar info de autenticação na tela
+  useEffect(() => {
+    console.log('🔍 ClientForm DEBUG:', {
+      user: user ? { uid: user.uid, email: user.email } : null,
+      isEditing,
+      id,
+      params: useParams()
+    })
+    setDebugInfo({
+      user: user ? { email: user.email, uid: user.uid?.slice(0, 8) + '...' } : null,
+      isEditing,
+      id,
+      timestamp: new Date().toISOString()
+    })
+  }, [user, isEditing, id])
 
   useEffect(() => {
     if (isEditing) {
@@ -42,6 +59,7 @@ export const ClientForm = () => {
         navigate('/admin/login')
         return
       }
+      console.log('🔍 Loading client with id:', id)
       const data = await getClient(id)
       if (!data) {
         alert('Cliente não encontrado')
@@ -77,7 +95,10 @@ export const ClientForm = () => {
     setAuthError(null)
 
     if (!user) {
-      setAuthError('Você precisa estar logado para cadastrar clientes')
+      const msg = 'Você precisa estar logado para cadastrar clientes'
+      setAuthError(msg)
+      alert(msg)
+      console.error('❌ Unauthorized: no user')
       return
     }
 
@@ -94,27 +115,30 @@ export const ClientForm = () => {
 
     setSaving(true)
     try {
-      console.log('Attempting to save client:', client) // DEBUG
-      console.log('User auth status:', user ? 'Authenticated' : 'NOT AUTHENTICATED')
+      console.log('🚀 Attempting to save client:', client)
+      console.log('👤 User auth status:', user ? { email: user.email, uid: user.uid } : 'NOT AUTHENTICATED')
+      console.log('📤 Operation:', isEditing ? 'UPDATE' : 'CREATE')
+
       if (isEditing) {
         const result = await updateClient(id, client)
-        console.log('Update result:', result)
+        console.log('✅ Update result:', result)
         alert('Cliente atualizado com sucesso!')
       } else {
         const result = await createClient(client)
-        console.log('Create result:', result)
+        console.log('✅ Create result:', result)
         alert(`Cliente "${client.name}" criado com sucesso!`)
       }
       navigate('/admin/clientes')
     } catch (error) {
-      console.error('Save error:', error)
-      console.error('Error details:', JSON.stringify(error, null, 2))
+      console.error('❌ Save error:', error)
+      console.error('📋 Error details:', JSON.stringify(error, null, 2))
       const errorMsg = error?.code || error?.message || 'Erro desconhecido'
       alert(`Erro ao salvar cliente: ${errorMsg}`)
       // Mostra erro específico de autenticação
       if (error?.code === 'permission-denied') {
         alert('ERRO DE PERMISSÃO: Verifique as regras do Firestore e se você está logado.')
       }
+      setError(`Erro: ${errorMsg}`)
     } finally {
       setSaving(false)
     }
@@ -150,18 +174,32 @@ export const ClientForm = () => {
         </div>
       </div>
 
+      {/* DEBUG PANEL - Mostra estado de autenticação */}
+      <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
+        <div className="flex items-center gap-2 mb-2">
+          <Bug className="h-4 w-4 text-teal-400" />
+          <span className="text-sm font-semibold text-teal-400">DEBUG INFO</span>
+        </div>
+        <div className="text-xs space-y-1 text-slate-300 font-mono">
+          <div>User: {debugInfo?.user ? JSON.stringify(debugInfo.user) : 'N/A'}</div>
+          <div>Mode: {isEditing ? 'EDIT' : 'CREATE'}</div>
+          <div>ID param: {id || 'none'}</div>
+          <div>Authenticated: {user ? '✅ YES' : '❌ NO'}</div>
+          <div>Timestamp: {debugInfo?.timestamp}</div>
+        </div>
+        {authError && (
+          <div className="mt-3 p-2 bg-red-900/30 border border-red-700 rounded text-xs text-red-400">
+            ⚠️ {authError}
+          </div>
+        )}
+      </div>
+
       {/* Form */}
       <div className="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {authError && (
+          {error && (
             <div className="p-4 bg-red-900/30 border border-red-700 rounded-md flex items-start">
               <AlertCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-red-400">{authError}</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="p-4 bg-red-900/30 border border-red-700 rounded-md">
               <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
