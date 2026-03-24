@@ -379,6 +379,9 @@ export const useQuoteLogic = () => {
         valid_until: quote.valid_until,
         discount: quote.discount,
         notes: quote.notes,
+        subtotal_services: calculatedServices,
+        subtotal_materials: calculatedMaterials,
+        total: calculatedTotal,
         items: itemsToSave
       })
 
@@ -392,6 +395,9 @@ export const useQuoteLogic = () => {
           valid_until: quote.valid_until || null,
           discount: quote.discount,
           notes: quote.notes,
+          subtotal_services: calculatedServices,
+          subtotal_materials: calculatedMaterials,
+          total: calculatedTotal,
           items: itemsToSave
         })
         console.log('✅ Orçamento criado com sucesso:', data)
@@ -410,6 +416,9 @@ export const useQuoteLogic = () => {
           valid_until: quote.valid_until || null,
           discount: quote.discount,
           notes: quote.notes,
+          subtotal_services: calculatedServices,
+          subtotal_materials: calculatedMaterials,
+          total: calculatedTotal,
           items: itemsToSave
         })
         setItems([]) // Clear pending changes
