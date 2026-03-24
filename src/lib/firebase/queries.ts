@@ -30,8 +30,8 @@ const snapshotToArray = (snapshot) => {
 // CLIENTS COLLECTION OPERATIONS
 // ============================================
 
-export const getClients = async (limit, startAfter) => {
-  console.log('🔍 getClients called', { limit, startAfter: startAfter?.id });
+export const getClients = async (limit, startAfter, signal) => {
+  console.log('🔍 getClients called', { limit, startAfter: startAfter?.id, signal: !!signal });
   if (!db) {
     console.error('❌ getClients: Firestore database (db) is not initialized');
     throw new Error('Database not initialized. Please check Firebase configuration.');
@@ -45,7 +45,17 @@ export const getClients = async (limit, startAfter) => {
       constraints.push(startAfter(startAfter));
     }
     const q = query(collection(db, 'quote_clients'), ...constraints);
-    const snapshot = await getDocs(q);
+
+    // Add timeout via AbortController if signal provided
+    let controller
+    if (!signal) {
+      controller = new AbortController()
+      signal = controller.signal
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s
+      signal.addEventListener('abort', () => clearTimeout(timeoutId), { once: true })
+    }
+
+    const snapshot = await getDocs(q, { signal });
     const result = {
       data: snapshotToArray(snapshot),
       lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,

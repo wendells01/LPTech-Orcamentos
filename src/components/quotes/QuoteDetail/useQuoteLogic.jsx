@@ -69,29 +69,35 @@ export const useQuoteLogic = () => {
     setDebugLogs(prev => [...prev.slice(-19), { type, message, data, timestamp }]) // Keep last 20 logs
   }
 
-  // Load data with timeout protection
+  // Load data — each loader has its own 10s timeout
   useEffect(() => {
+    console.log('🔍 useQuoteLogic: useEffect rodando', { id, isNew, userEmail: user?.email, userExists: !!user })
     let isMounted = true
-    const LOADING_TIMEOUT_MS = 15000 // 15 seconds
-
-    const timeoutId = setTimeout(() => {
-      if (isMounted) {
-        console.error('⏱️ Loading timeout exceeded after 15s')
-        setRefDataError(prev => prev || 'Tempo limite excedido ao carregar dados. Verifique sua conexão.')
-        setLoading(false)
-      }
-    }, LOADING_TIMEOUT_MS)
 
     const loadAllData = async () => {
       try {
         console.log('🚀 Iniciando carregamento de dados:', { isNew, id })
 
+        // Fail fast if no user
+        if (!user) {
+          const err = new Error('Usuário não autenticado')
+          console.error('❌ loadAllData: Sem usuário logado')
+          if (isMounted) {
+            setRefDataError('Você precisa estar logado para acessar esta página.')
+            setLoading(false)
+          }
+          throw err
+        }
+
         // Load reference data in parallel (clients, services, materials)
+        // Cada load* tem timeout próprio de 10s
+        console.log('📦 Iniciando Promise.allSettled das 3 consultas...')
         const results = await Promise.allSettled([
           loadClients(),
           loadServices(),
           loadMaterials()
         ])
+        console.log('✅ Promise.allSettled resolved')
 
         // Check for errors
         const errors = []
@@ -118,7 +124,7 @@ export const useQuoteLogic = () => {
             await loadQuote()
           } catch (err) {
             console.error('❌ Erro ao carregar orçamento:', err)
-            // Don't set refDataError here - loadQuote already handles its own errors
+            // loadQuote já lida com redirect e messages
           }
         }
 
@@ -132,8 +138,6 @@ export const useQuoteLogic = () => {
           setRefDataError('Erro inesperado ao carregar dados')
           setLoading(false)
         }
-      } finally {
-        clearTimeout(timeoutId)
       }
     }
 
@@ -141,14 +145,18 @@ export const useQuoteLogic = () => {
 
     return () => {
       isMounted = false
-      clearTimeout(timeoutId)
+      console.log('🧹 useQuoteEffect cleanup')
     }
-  }, [id, isNew])
+  }, [id, isNew, user]) // ✅ user added as dependency
 
   const loadQuote = async () => {
     addDebugLog('INFO', 'Carregando orçamento', { id })
     try {
-      const data = await getQuote(id)
+      // Timeout de 10s para loadQuote
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout ao carregar orçamento')), 10000)
+      )
+      const data = await Promise.race([getQuote(id), timeoutPromise])
       addDebugLog('DATA', 'Dados recebidos', data)
 
       if (!data) {
@@ -195,10 +203,18 @@ export const useQuoteLogic = () => {
       console.error('❌ loadClients: Usuário NÃO autenticado!')
       throw new Error('Usuário não autenticado')
     }
-    const { data: clientsData } = await getClients()
-    console.log('🔍 useQuoteLogic: Clientes carregados:', clientsData?.length || 0, 'clientes')
-    setClients(clientsData || [])
-    return clientsData
+    // Timeout de 10s para esta operação específica
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout ao carregar clientes')), 10000)
+    )
+    const loadPromise = getClients()
+    return Promise.race([loadPromise, timeoutPromise])
+      .then(result => {
+        const { data: clientsData } = result
+        console.log('🔍 useQuoteLogic: Clientes carregados:', clientsData?.length || 0, 'clientes')
+        setClients(clientsData || [])
+        return clientsData
+      })
   }
 
   const loadServices = async () => {
@@ -207,10 +223,18 @@ export const useQuoteLogic = () => {
       console.error('❌ loadServices: Usuário NÃO autenticado!')
       throw new Error('Usuário não autenticado')
     }
-    const { data: servicesData } = await getServices()
-    console.log('🔍 useQuoteLogic: Serviços carregados:', servicesData?.length || 0)
-    setServices(servicesData || [])
-    return servicesData
+    // Timeout de 10s para esta operação específica
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout ao carregar serviços')), 10000)
+    )
+    const loadPromise = getServices()
+    return Promise.race([loadPromise, timeoutPromise])
+      .then(result => {
+        const { data: servicesData } = result
+        console.log('🔍 useQuoteLogic: Serviços carregados:', servicesData?.length || 0)
+        setServices(servicesData || [])
+        return servicesData
+      })
   }
 
   const loadMaterials = async () => {
@@ -219,10 +243,18 @@ export const useQuoteLogic = () => {
       console.error('❌ loadMaterials: Usuário NÃO autenticado!')
       throw new Error('Usuário não autenticado')
     }
-    const { data: materialsData } = await getMaterials()
-    console.log('🔍 useQuoteLogic: Materiais carregados:', materialsData?.length || 0)
-    setMaterials(materialsData || [])
-    return materialsData
+    // Timeout de 10s para esta operação específica
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout ao carregar materiais')), 10000)
+    )
+    const loadPromise = getMaterials()
+    return Promise.race([loadPromise, timeoutPromise])
+      .then(result => {
+        const { data: materialsData } = result
+        console.log('🔍 useQuoteLogic: Materiais carregados:', materialsData?.length || 0)
+        setMaterials(materialsData || [])
+        return materialsData
+      })
   }
 
   // Calculated totals - now based on all items (including pending)
