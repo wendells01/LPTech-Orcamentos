@@ -32,6 +32,10 @@ const snapshotToArray = (snapshot) => {
 
 export const getClients = async (limit, startAfter) => {
   console.log('🔍 getClients called', { limit, startAfter: startAfter?.id });
+  if (!db) {
+    console.error('❌ getClients: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const constraints = [orderBy('name')];
     if (limit) {
@@ -57,6 +61,10 @@ export const getClients = async (limit, startAfter) => {
 
 export const getClient = async (id) => {
   console.log('🔍 getClient called with id:', id);
+  if (!db) {
+    console.error('❌ getClient: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const docRef = doc(db, 'quote_clients', id);
     const snapshot = await getDoc(docRef);
@@ -71,6 +79,10 @@ export const getClient = async (id) => {
 
 export const createClient = async (client) => {
   console.log('🚀 createClient called with:', { name: client.name, email: client.email, city: client.city });
+  if (!db) {
+    console.error('❌ createClient: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const docRef = await addDoc(collection(db, 'quote_clients'), {
       ...client,
@@ -87,6 +99,10 @@ export const createClient = async (client) => {
 
 export const updateClient = async (id, client) => {
   console.log('🔄 updateClient called for id:', id, 'with:', { name: client.name });
+  if (!db) {
+    console.error('❌ updateClient: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const clientRef = doc(db, 'quote_clients', id);
     await updateDoc(clientRef, {
@@ -104,6 +120,10 @@ export const updateClient = async (id, client) => {
 
 export const deleteClient = async (id) => {
   console.log('🗑️ deleteClient called for id:', id);
+  if (!db) {
+    console.error('❌ deleteClient: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     await deleteDoc(doc(db, 'quote_clients', id));
     console.log('✅ deleteClient SUCCESS');
@@ -119,6 +139,10 @@ export const deleteClient = async (id) => {
 
 export const getServices = async (limit, startAfter) => {
   console.log('🔍 getServices called');
+  if (!db) {
+    console.error('❌ getServices: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const constraints = [orderBy('name')];
     if (limit) {
@@ -144,6 +168,10 @@ export const getServices = async (limit, startAfter) => {
 
 export const getService = async (id) => {
   console.log('🔍 getService called with id:', id);
+  if (!db) {
+    console.error('❌ getService: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const docRef = doc(db, 'services', id);
     const snapshot = await getDoc(docRef);
@@ -157,6 +185,10 @@ export const getService = async (id) => {
 
 export const createService = async (service) => {
   console.log('🚀 createService called with:', { name: service.name, price: service.unit_price });
+  if (!db) {
+    console.error('❌ createService: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const docRef = await addDoc(collection(db, 'services'), {
       ...service,
@@ -174,6 +206,10 @@ export const createService = async (service) => {
 
 export const updateService = async (id, service) => {
   console.log('🔄 updateService called for id:', id);
+  if (!db) {
+    console.error('❌ updateService: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const serviceRef = doc(db, 'services', id);
     await updateDoc(serviceRef, {
@@ -191,6 +227,10 @@ export const updateService = async (id, service) => {
 
 export const deleteService = async (id) => {
   console.log('🗑️ deleteService called for id:', id);
+  if (!db) {
+    console.error('❌ deleteService: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     await deleteDoc(doc(db, 'services', id));
     console.log('✅ deleteService SUCCESS');
@@ -206,6 +246,10 @@ export const deleteService = async (id) => {
 
 export const getMaterials = async (limit, startAfter) => {
   console.log('🔍 getMaterials called');
+  if (!db) {
+    console.error('❌ getMaterials: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const constraints = [orderBy('name')];
     if (limit) {
@@ -231,6 +275,10 @@ export const getMaterials = async (limit, startAfter) => {
 
 export const getMaterial = async (id) => {
   console.log('🔍 getMaterial called with id:', id);
+  if (!db) {
+    console.error('❌ getMaterial: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const docRef = doc(db, 'materials', id);
     const snapshot = await getDoc(docRef);
@@ -244,6 +292,10 @@ export const getMaterial = async (id) => {
 
 export const createMaterial = async (material) => {
   console.log('🚀 createMaterial called with:', { name: material.name, price: material.unit_price });
+  if (!db) {
+    console.error('❌ createMaterial: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const docRef = await addDoc(collection(db, 'materials'), {
       ...material,
@@ -261,6 +313,10 @@ export const createMaterial = async (material) => {
 
 export const updateMaterial = async (id, material) => {
   console.log('🔄 updateMaterial called for id:', id);
+  if (!db) {
+    console.error('❌ updateMaterial: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const materialRef = doc(db, 'materials', id);
     await updateDoc(materialRef, {
@@ -278,6 +334,10 @@ export const updateMaterial = async (id, material) => {
 
 export const deleteMaterial = async (id) => {
   console.log('🗑️ deleteMaterial called for id:', id);
+  if (!db) {
+    console.error('❌ deleteMaterial: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     await deleteDoc(doc(db, 'materials', id));
     console.log('✅ deleteMaterial SUCCESS');
@@ -292,6 +352,10 @@ export const deleteMaterial = async (id) => {
 // ============================================
 
 export const getQuoteItems = async (quoteId) => {
+  if (!db) {
+    console.error('❌ getQuoteItems: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const q = query(
       collection(db, 'quotes', quoteId, 'items'),
@@ -308,6 +372,10 @@ export const getQuoteItems = async (quoteId) => {
 };
 
 export const createQuoteItem = async (quoteId, item) => {
+  if (!db) {
+    console.error('❌ createQuoteItem: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const docRef = await addDoc(collection(db, 'quotes', quoteId, 'items'), {
       ...item,
@@ -321,6 +389,10 @@ export const createQuoteItem = async (quoteId, item) => {
 };
 
 export const updateQuoteItem = async (quoteId, itemId, item) => {
+  if (!db) {
+    console.error('❌ updateQuoteItem: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const itemRef = doc(db, 'quotes', quoteId, 'items', itemId);
     await updateDoc(itemRef, item);
@@ -332,6 +404,10 @@ export const updateQuoteItem = async (quoteId, itemId, item) => {
 };
 
 export const deleteQuoteItem = async (quoteId, itemId) => {
+  if (!db) {
+    console.error('❌ deleteQuoteItem: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     await deleteDoc(doc(db, 'quotes', quoteId, 'items', itemId));
     console.log('✅ deleteQuoteItem success');
@@ -355,6 +431,10 @@ export const generateQuoteNumber = () => {
 
 export const getQuotes = async (filters = {}, limit, startAfter) => {
   console.log('🔍 getQuotes called', { filters, limit });
+  if (!db) {
+    console.error('❌ getQuotes: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const baseQueryConstraints = [orderBy('createdAt', 'desc')];
 
@@ -396,6 +476,10 @@ export const getQuotes = async (filters = {}, limit, startAfter) => {
 
 export const getQuote = async (id) => {
   console.log('🔍 getQuote called with id:', id);
+  if (!db) {
+    console.error('❌ getQuote: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const quoteRef = doc(db, 'quotes', id);
     console.log('🔍 getQuote: Document reference created:', quoteRef.path);
@@ -436,6 +520,10 @@ export const createQuote = async (quoteData) => {
     description: quoteData.description,
     itemsCount: quoteData.items?.length || 0
   });
+  if (!db) {
+    console.error('❌ createQuote: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const quoteNumber = generateQuoteNumber();
 
@@ -474,6 +562,10 @@ export const createQuote = async (quoteData) => {
 
 export const updateQuote = async (id, quoteData) => {
   console.log('🔄 updateQuote called for id:', id);
+  if (!db) {
+    console.error('❌ updateQuote: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     const quoteRef = doc(db, 'quotes', id);
 
@@ -519,6 +611,10 @@ export const updateQuote = async (id, quoteData) => {
 
 export const deleteQuote = async (id) => {
   console.log('🗑️ deleteQuote called for id:', id);
+  if (!db) {
+    console.error('❌ deleteQuote: Firestore database (db) is not initialized');
+    throw new Error('Database not initialized. Please check Firebase configuration.');
+  }
   try {
     // Delete items from subcollection first
     const items = await getQuoteItems(id);

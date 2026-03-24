@@ -7,6 +7,14 @@ import { Input, Textarea } from '../../components/common/Input.jsx'
 import { Spinner } from '../../components/common/Spinner.jsx'
 import { useAuth } from '../../hooks/useAuth.jsx'
 
+// Helper: Promise with timeout
+const withTimeout = (promise, ms, message) => {
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(message || 'Timeout')), ms)
+  )
+  return Promise.race([promise, timeout])
+}
+
 export const ClientForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -141,9 +149,15 @@ export const ClientForm = () => {
         timestamp: new Date().toLocaleTimeString()
       })
 
+      // Add 30 second timeout to prevent hanging indefinitely
+      const savePromise = isEditing
+        ? updateClient(id, client)
+        : createClient(client)
+
+      const result = await withTimeout(savePromise, 30000, 'Operação excedeu o tempo limite (30s)')
+      console.log('✅ Save result:', result)
+
       if (isEditing) {
-        const result = await updateClient(id, client)
-        console.log('✅ Update result:', result)
         setLastOperation({
           type: 'SAVE',
           status: 'SUCCESS',
@@ -154,8 +168,6 @@ export const ClientForm = () => {
         })
         alert('✅ Cliente atualizado com sucesso!')
       } else {
-        const result = await createClient(client)
-        console.log('✅ Create result:', result)
         setLastOperation({
           type: 'SAVE',
           status: 'SUCCESS',
@@ -187,6 +199,8 @@ export const ClientForm = () => {
         alert('🔴 ERRO DE PERMISSÃO: Verifique:\n1. Se você está logado\n2. Se as regras do Firebase permitem escrita\n3. Se sua sessão não expirou')
       } else if (error?.code === 'unauthenticated') {
         alert('🔴 ERRO DE AUTENTICAÇÃO: Sua sessão expirou. Faça login novamente.')
+      } else if (error.message?.includes('timeout') || error.message?.includes('Timeout')) {
+        alert('⏱️ A operação excedeu o tempo limite. Verifique sua conexão com a internet e tente novamente.')
       }
       setError(`Erro: ${errorMsg}`)
     } finally {

@@ -19,9 +19,8 @@ export const useQuoteLogic = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
-  // Fix: Determine mode based on route pathname, not just id param
-  // Because /novo is a static route and useParams() returns {} not {id: 'novo'}
-  const isNew = location.pathname.endsWith('/novo') || (!id && location.pathname.includes('/orcamentos'))
+  // Precise detection: only /admin/orcamentos/novo is creation mode
+  const isNew = location.pathname === '/admin/orcamentos/novo'
 
   console.log('🔍 useQuoteLogic: Inicializando', { id, isNew, pathname: location.pathname, user: user?.email })
 
@@ -36,6 +35,7 @@ export const useQuoteLogic = () => {
   const [clients, setClients] = useState([])
   const [services, setServices] = useState([])
   const [materials, setMaterials] = useState([])
+  const [refDataError, setRefDataError] = useState(null)
 
   // Quote data
   const [quote, setQuote] = useState({
@@ -71,18 +71,59 @@ export const useQuoteLogic = () => {
 
   // Load data
   useEffect(() => {
-    // Only load existing quote if we have a valid id and are NOT in creation mode
-    if (!isNew && id) {
-      loadQuote()
-    } else {
-      // In creation mode, just set loading to false immediately
-      console.log('✅ Modo criação detectado - não carregando orçamento existente')
-      setLoading(false)
+    let mounted = true
+
+    const loadAllData = async () => {
+      console.log('🚀 Iniciando carregamento de dados:', { isNew, id })
+
+      // Load reference data in parallel (clients, services, materials)
+      const results = await Promise.allSettled([
+        loadClients(),
+        loadServices(),
+        loadMaterials()
+      ])
+
+      // Check for errors
+      const errors = []
+      if (results[0].status === 'rejected') {
+        errors.push('clientes')
+        console.error('❌ Erro ao carregar clientes:', results[0].reason)
+      }
+      if (results[1].status === 'rejected') {
+        errors.push('serviços')
+        console.error('❌ Erro ao carregar serviços:', results[1].reason)
+      }
+      if (results[2].status === 'rejected') {
+        errors.push('materiais')
+        console.error('❌ Erro ao carregar materiais:', results[2].reason)
+      }
+
+      if (errors.length > 0 && mounted) {
+        setRefDataError(`Falha ao carregar: ${errors.join(', ')}`)
+      }
+
+      // Only load existing quote if we have a valid id and are NOT in creation mode
+      if (!isNew && id) {
+        try {
+          await loadQuote()
+        } catch (err) {
+          console.error('❌ Erro ao carregar orçamento:', err)
+          // Don't set refDataError here - loadQuote already handles its own errors
+        }
+      }
+
+      // Ensure loading is false after all operations complete
+      if (mounted) {
+        console.log('✅ Carregamento concluído')
+        setLoading(false)
+      }
     }
-    // Always load reference data
-    loadClients()
-    loadServices()
-    loadMaterials()
+
+    loadAllData()
+
+    return () => {
+      mounted = false
+    }
   }, [id, isNew])
 
   const loadQuote = async () => {
@@ -95,7 +136,7 @@ export const useQuoteLogic = () => {
         addDebugLog('WARN', 'Orçamento não encontrado')
         alert('Orçamento não encontrado')
         navigate('/admin/orcamentos')
-        return
+        throw new Error('Quote not found')
       }
 
       // Ensure items have total calculated if missing
@@ -120,62 +161,49 @@ export const useQuoteLogic = () => {
       })
       setItems(itemsWithTotal)
       addDebugLog('SUCCESS', 'Orçamento carregado')
+      return data
     } catch (error) {
       addDebugLog('ERROR', 'Erro ao carregar orçamento', { error: error.message, code: error.code })
       alert(`Erro ao carregar orçamento: ${error.message || error.code}`)
       navigate('/admin/orcamentos')
-    } finally {
-      setLoading(false)
+      throw error
     }
   }
 
   const loadClients = async () => {
-    try {
-      console.log('🔍 useQuoteLogic: Carregando clientes para orçamento...')
-      if (!user) {
-        console.error('❌ loadClients: Usuário NÃO autenticado!')
-        setError('Você precisa estar logado para carregar clientes')
-        setLoading(false)
-        return
-      }
-      const { data: clientsData } = await getClients()
-      console.log('🔍 useQuoteLogic: Clientes carregados:', clientsData?.length || 0, 'clientes')
-      console.log('🔍 useQuoteLogic: Dados dos clientes:', clientsData)
-      setClients(clientsData || [])
-    } catch (error) {
-      console.error('❌ Error loading clients:', error)
-      setError(error.message)
+    console.log('🔍 useQuoteLogic: Carregando clientes para orçamento...')
+    if (!user) {
+      console.error('❌ loadClients: Usuário NÃO autenticado!')
+      throw new Error('Usuário não autenticado')
     }
+    const { data: clientsData } = await getClients()
+    console.log('🔍 useQuoteLogic: Clientes carregados:', clientsData?.length || 0, 'clientes')
+    setClients(clientsData || [])
+    return clientsData
   }
 
   const loadServices = async () => {
-    try {
-      console.log('🔍 useQuoteLogic: Carregando serviços...')
-      if (!user) {
-        console.error('❌ loadServices: Usuário NÃO autenticado!')
-        return
-      }
-      const { data: servicesData } = await getServices()
-      console.log('🔍 useQuoteLogic: Serviços carregados:', servicesData?.length || 0)
-      setServices(servicesData || [])
-    } catch (error) {
-      console.error('❌ Error loading services:', error)
+    console.log('🔍 useQuoteLogic: Carregando serviços...')
+    if (!user) {
+      console.error('❌ loadServices: Usuário NÃO autenticado!')
+      throw new Error('Usuário não autenticado')
     }
+    const { data: servicesData } = await getServices()
+    console.log('🔍 useQuoteLogic: Serviços carregados:', servicesData?.length || 0)
+    setServices(servicesData || [])
+    return servicesData
   }
 
   const loadMaterials = async () => {
-    try {
-      console.log('🔍 useQuoteLogic: Carregando materiais...')
-      if (!user) {
-        console.error('❌ loadMaterials: Usuário NÃO autenticado!')
-        return
-      }
-      const { data: materialsData } = await getMaterials()
-      console.log('🔍 useQuoteLogic: Materiais carregados:', materialsData?.length || 0)
-      setMaterials(materialsData || [])
-    } catch (error) {
-      console.error('❌ Error loading materials:', error)
+    console.log('🔍 useQuoteLogic: Carregando materiais...')
+    if (!user) {
+      console.error('❌ loadMaterials: Usuário NÃO autenticado!')
+      throw new Error('Usuário não autenticado')
     }
+    const { data: materialsData } = await getMaterials()
+    console.log('🔍 useQuoteLogic: Materiais carregados:', materialsData?.length || 0)
+    setMaterials(materialsData || [])
+    return materialsData
   }
 
   // Calculated totals - now based on all items (including pending)
