@@ -78,21 +78,35 @@ export const getClient = async (id) => {
 };
 
 export const createClient = async (client) => {
-  console.log('🚀 createClient called with:', { name: client.name, email: client.email, city: client.city });
+  console.log('🚀 createClient START', {
+    name: client.name,
+    email: client.email,
+    city: client.city,
+    timestamp: Date.now()
+  });
   if (!db) {
-    console.error('❌ createClient: Firestore database (db) is not initialized');
+    console.error('❌ createClient: db is NULL');
     throw new Error('Database not initialized. Please check Firebase configuration.');
   }
   try {
+    console.log('🔧 createClient: calling addDoc...');
     const docRef = await addDoc(collection(db, 'quote_clients'), {
       ...client,
       createdAt: serverTimestamp(),
     });
     const result = { id: docRef.id, ...client };
-    console.log('✅ createClient SUCCESS:', result);
+    console.log('✅ createClient SUCCESS', {
+      id: docRef.id,
+      timestamp: Date.now()
+    });
     return result;
   } catch (error) {
-    console.error('❌ createClient FAILED:', error.code || error.message, error);
+    console.error('❌ createClient FAILED', {
+      code: error?.code,
+      message: error?.message,
+      stack: error?.stack,
+      timestamp: Date.now()
+    });
     throw error;
   }
 };

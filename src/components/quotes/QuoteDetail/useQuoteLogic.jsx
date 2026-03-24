@@ -24,8 +24,8 @@ export const useQuoteLogic = () => {
 
   console.log('🔍 useQuoteLogic: Inicializando', { id, isNew, pathname: location.pathname, user: user?.email })
 
-  // Loading states
-  const [loading, setLoading] = useState(!isNew)
+  // Loading states - sempre começa true, pois precisamos carregar dados de referência
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deletingItem, setDeletingItem] = useState(null)
   const [error, setError] = useState(null)
@@ -69,60 +69,79 @@ export const useQuoteLogic = () => {
     setDebugLogs(prev => [...prev.slice(-19), { type, message, data, timestamp }]) // Keep last 20 logs
   }
 
-  // Load data
+  // Load data with timeout protection
   useEffect(() => {
-    let mounted = true
+    let isMounted = true
+    const LOADING_TIMEOUT_MS = 15000 // 15 seconds
+
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.error('⏱️ Loading timeout exceeded after 15s')
+        setRefDataError(prev => prev || 'Tempo limite excedido ao carregar dados. Verifique sua conexão.')
+        setLoading(false)
+      }
+    }, LOADING_TIMEOUT_MS)
 
     const loadAllData = async () => {
-      console.log('🚀 Iniciando carregamento de dados:', { isNew, id })
+      try {
+        console.log('🚀 Iniciando carregamento de dados:', { isNew, id })
 
-      // Load reference data in parallel (clients, services, materials)
-      const results = await Promise.allSettled([
-        loadClients(),
-        loadServices(),
-        loadMaterials()
-      ])
+        // Load reference data in parallel (clients, services, materials)
+        const results = await Promise.allSettled([
+          loadClients(),
+          loadServices(),
+          loadMaterials()
+        ])
 
-      // Check for errors
-      const errors = []
-      if (results[0].status === 'rejected') {
-        errors.push('clientes')
-        console.error('❌ Erro ao carregar clientes:', results[0].reason)
-      }
-      if (results[1].status === 'rejected') {
-        errors.push('serviços')
-        console.error('❌ Erro ao carregar serviços:', results[1].reason)
-      }
-      if (results[2].status === 'rejected') {
-        errors.push('materiais')
-        console.error('❌ Erro ao carregar materiais:', results[2].reason)
-      }
-
-      if (errors.length > 0 && mounted) {
-        setRefDataError(`Falha ao carregar: ${errors.join(', ')}`)
-      }
-
-      // Only load existing quote if we have a valid id and are NOT in creation mode
-      if (!isNew && id) {
-        try {
-          await loadQuote()
-        } catch (err) {
-          console.error('❌ Erro ao carregar orçamento:', err)
-          // Don't set refDataError here - loadQuote already handles its own errors
+        // Check for errors
+        const errors = []
+        if (results[0].status === 'rejected') {
+          errors.push('clientes')
+          console.error('❌ Erro ao carregar clientes:', results[0].reason)
         }
-      }
+        if (results[1].status === 'rejected') {
+          errors.push('serviços')
+          console.error('❌ Erro ao carregar serviços:', results[1].reason)
+        }
+        if (results[2].status === 'rejected') {
+          errors.push('materiais')
+          console.error('❌ Erro ao carregar materiais:', results[2].reason)
+        }
 
-      // Ensure loading is false after all operations complete
-      if (mounted) {
-        console.log('✅ Carregamento concluído')
-        setLoading(false)
+        if (errors.length > 0 && isMounted) {
+          setRefDataError(`Falha ao carregar: ${errors.join(', ')}`)
+        }
+
+        // Only load existing quote if we have a valid id and are NOT in creation mode
+        if (!isNew && id) {
+          try {
+            await loadQuote()
+          } catch (err) {
+            console.error('❌ Erro ao carregar orçamento:', err)
+            // Don't set refDataError here - loadQuote already handles its own errors
+          }
+        }
+
+        if (isMounted) {
+          console.log('✅ Carregamento concluído')
+          setLoading(false)
+        }
+      } catch (err) {
+        console.error('❌ Erro geral no carregamento:', err)
+        if (isMounted) {
+          setRefDataError('Erro inesperado ao carregar dados')
+          setLoading(false)
+        }
+      } finally {
+        clearTimeout(timeoutId)
       }
     }
 
     loadAllData()
 
     return () => {
-      mounted = false
+      isMounted = false
+      clearTimeout(timeoutId)
     }
   }, [id, isNew])
 
