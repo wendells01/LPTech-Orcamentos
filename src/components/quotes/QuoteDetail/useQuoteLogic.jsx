@@ -71,18 +71,25 @@ export const useQuoteLogic = () => {
   }, [id])
 
   const loadQuote = async () => {
+    console.log('🔍 useQuoteLogic: Carregando orçamento com id:', id)
     try {
       const data = await getQuote(id)
+      console.log('🔍 useQuoteLogic: Dados do orçamento recebidos:', data)
+
       if (!data) {
+        console.warn('⚠️ useQuoteLogic: Orçamento não encontrado')
         alert('Orçamento não encontrado')
         navigate('/admin/orcamentos')
         return
       }
+
       // Ensure items have total calculated if missing
       const itemsWithTotal = (data.items || []).map(item => ({
         ...item,
         total: item.total !== undefined ? Number(item.total) : Number(item.quantity) * Number(item.unit_price)
       }))
+      console.log('🔍 useQuoteLogic: Itens processados:', itemsWithTotal.length, 'itens')
+
       setQuote({
         quote_number: data.quote_number,
         client_id: data.client_id || '',
@@ -97,9 +104,11 @@ export const useQuoteLogic = () => {
         total: Number(data.total) || 0,
       })
       setItems(itemsWithTotal)
+      console.log('✅ useQuoteLogic: Orçamento carregado com sucesso')
     } catch (error) {
-      console.error('Error:', error)
-      alert('Erro ao carregar orçamento')
+      console.error('❌ useQuoteLogic: Erro ao carregar orçamento:', error)
+      console.error('📋 Error details:', JSON.stringify(error, null, 2))
+      alert(`Erro ao carregar orçamento: ${error.message || error.code}`)
       navigate('/admin/orcamentos')
     } finally {
       setLoading(false)

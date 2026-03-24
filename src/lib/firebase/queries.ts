@@ -398,25 +398,34 @@ export const getQuote = async (id) => {
   console.log('🔍 getQuote called with id:', id);
   try {
     const quoteRef = doc(db, 'quotes', id);
+    console.log('🔍 getQuote: Document reference created:', quoteRef.path);
+
     const quoteSnap = await getDoc(quoteRef);
+    console.log('🔍 getQuote: Document snapshot exists:', quoteSnap.exists());
 
     if (!quoteSnap.exists()) {
       console.log('⚠️ getQuote: Quote not found');
       return null;
     }
 
+    const quoteData = quoteSnap.data();
+    console.log('🔍 getQuote: Quote data:', quoteData);
+
     const quote = {
       id: quoteRef.id,
-      ...quoteSnap.data()
+      ...quoteData
     };
 
     // Get the items from subcollection
+    console.log('🔍 getQuote: Fetching items from subcollection...');
     const items = await getQuoteItems(id);
+    console.log('🔍 getQuote: Items fetched:', items.length, 'items');
     quote.items = items;
 
     return quote;
   } catch (error) {
     console.error('❌ getQuote error:', error);
+    console.error('📋 Full error:', JSON.stringify(error, null, 2));
     throw error;
   }
 };
