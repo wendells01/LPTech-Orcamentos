@@ -137,6 +137,7 @@ export const ClientForm = () => {
         status: 'STARTED',
         message: `Enviando para Firebase...`,
         details: `Operação: ${isEditing ? 'UPDATE' : 'CREATE'}`,
+        payload: { ...client },
         timestamp: new Date().toLocaleTimeString()
       })
 
@@ -148,6 +149,7 @@ export const ClientForm = () => {
           status: 'SUCCESS',
           message: `Cliente "${client.name}" atualizado com sucesso!`,
           details: `ID: ${result.id}`,
+          response: result,
           timestamp: new Date().toLocaleTimeString()
         })
         alert('✅ Cliente atualizado com sucesso!')
@@ -158,7 +160,8 @@ export const ClientForm = () => {
           type: 'SAVE',
           status: 'SUCCESS',
           message: `Cliente "${client.name}" criado com sucesso!`,
-          details: `ID: ${result.id}`,
+          details: `ID: ${result.id}\nColeção: quote_clients`,
+          response: result,
           timestamp: new Date().toLocaleTimeString()
         })
         alert(`✅ Cliente "${client.name}" criado com sucesso!`)
