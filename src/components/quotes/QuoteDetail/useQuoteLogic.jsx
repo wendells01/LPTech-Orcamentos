@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   getQuote,
   createQuote,
@@ -17,10 +17,13 @@ import { useAuth } from '../../../hooks/useAuth.jsx'
 export const useQuoteLogic = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
-  const isNew = id === 'novo'
+  // Fix: Determine mode based on route pathname, not just id param
+  // Because /novo is a static route and useParams() returns {} not {id: 'novo'}
+  const isNew = location.pathname.endsWith('/novo') || (!id && location.pathname.includes('/orcamentos'))
 
-  console.log('🔍 useQuoteLogic: Inicializando', { id, isNew, user: user?.email })
+  console.log('🔍 useQuoteLogic: Inicializando', { id, isNew, pathname: location.pathname, user: user?.email })
 
   // Loading states
   const [loading, setLoading] = useState(!isNew)
@@ -68,14 +71,19 @@ export const useQuoteLogic = () => {
 
   // Load data
   useEffect(() => {
-    if (!isNew) {
+    // Only load existing quote if we have a valid id and are NOT in creation mode
+    if (!isNew && id) {
       loadQuote()
+    } else {
+      // In creation mode, just set loading to false immediately
+      console.log('✅ Modo criação detectado - não carregando orçamento existente')
+      setLoading(false)
     }
     // Always load reference data
     loadClients()
     loadServices()
     loadMaterials()
-  }, [id])
+  }, [id, isNew])
 
   const loadQuote = async () => {
     addDebugLog('INFO', 'Carregando orçamento', { id })
