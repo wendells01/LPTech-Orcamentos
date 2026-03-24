@@ -27,6 +27,7 @@ export const useQuoteLogic = () => {
   const [saving, setSaving] = useState(false)
   const [deletingItem, setDeletingItem] = useState(null)
   const [error, setError] = useState(null)
+  const [debugLogs, setDebugLogs] = useState([])
 
   // Reference data
   const [clients, setClients] = useState([])
@@ -59,6 +60,12 @@ export const useQuoteLogic = () => {
   const [selectedServices, setSelectedServices] = useState([])
   const [selectedMaterials, setSelectedMaterials] = useState([])
 
+  // Debug helper - captures logs to state for iPhone debugging
+  const addDebugLog = (type, message, data = null) => {
+    const timestamp = new Date().toLocaleTimeString('pt-BR', { hour12: false })
+    setDebugLogs(prev => [...prev.slice(-19), { type, message, data, timestamp }]) // Keep last 20 logs
+  }
+
   // Load data
   useEffect(() => {
     if (!isNew) {
@@ -71,13 +78,13 @@ export const useQuoteLogic = () => {
   }, [id])
 
   const loadQuote = async () => {
-    console.log('🔍 useQuoteLogic: Carregando orçamento com id:', id)
+    addDebugLog('INFO', 'Carregando orçamento', { id })
     try {
       const data = await getQuote(id)
-      console.log('🔍 useQuoteLogic: Dados do orçamento recebidos:', data)
+      addDebugLog('DATA', 'Dados recebidos', data)
 
       if (!data) {
-        console.warn('⚠️ useQuoteLogic: Orçamento não encontrado')
+        addDebugLog('WARN', 'Orçamento não encontrado')
         alert('Orçamento não encontrado')
         navigate('/admin/orcamentos')
         return
@@ -88,7 +95,7 @@ export const useQuoteLogic = () => {
         ...item,
         total: item.total !== undefined ? Number(item.total) : Number(item.quantity) * Number(item.unit_price)
       }))
-      console.log('🔍 useQuoteLogic: Itens processados:', itemsWithTotal.length, 'itens')
+      addDebugLog('INFO', 'Itens processados', { count: itemsWithTotal.length })
 
       setQuote({
         quote_number: data.quote_number,
@@ -104,10 +111,9 @@ export const useQuoteLogic = () => {
         total: Number(data.total) || 0,
       })
       setItems(itemsWithTotal)
-      console.log('✅ useQuoteLogic: Orçamento carregado com sucesso')
+      addDebugLog('SUCCESS', 'Orçamento carregado')
     } catch (error) {
-      console.error('❌ useQuoteLogic: Erro ao carregar orçamento:', error)
-      console.error('📋 Error details:', JSON.stringify(error, null, 2))
+      addDebugLog('ERROR', 'Erro ao carregar orçamento', { error: error.message, code: error.code })
       alert(`Erro ao carregar orçamento: ${error.message || error.code}`)
       navigate('/admin/orcamentos')
     } finally {
@@ -334,24 +340,18 @@ export const useQuoteLogic = () => {
   }
 
   const handleSaveQuote = async () => {
-    console.log('🚀 handleSaveQuote chamado')
-    console.log('📊 Estado atual:', {
-      client_id: quote.client_id,
-      itemsCount: items.length,
-      items,
-      isNew
-    })
+    addDebugLog('ACTION', 'Salvar orçamento cliqueado')
 
     if (!quote.client_id) {
       alert('Selecione um cliente')
-      console.error('❌ Nenhum cliente selecionado')
+      addDebugLog('ERROR', 'Nenhum cliente selecionado')
       return
     }
 
     // Validação: pelo menos um item (serviço ou material)
     if (items.length === 0) {
       alert('Adicione pelo menos um serviço ou material ao orçamento')
-      console.error('❌ Nenhum item no orçamento')
+      addDebugLog('ERROR', 'Nenhum item no orçamento')
       return
     }
 
@@ -362,14 +362,14 @@ export const useQuoteLogic = () => {
 
     if (invalidItems.length > 0) {
       alert('Todos os itens devem ter quantidade e preço unitário maiores que zero')
-      console.error('❌ Itens inválidos:', invalidItems)
+      addDebugLog('ERROR', 'Itens inválidos', invalidItems)
       return
     }
 
     setSaving(true)
     try {
       // Prepare items for saving (ensure total is calculated)
-      console.log('🔧 Preparando itens para salvar...')
+      addDebugLog('INFO', 'Preparando itens para salvar', { count: items.length })
       const itemsToSave = items.map((item, index) => {
         const total = item.total !== undefined ? Number(item.total) : Number(item.quantity) * Number(item.unit_price)
         const itemData = {
@@ -386,11 +386,11 @@ export const useQuoteLogic = () => {
         } else if (item.type === 'material') {
           itemData.material_id = item.material_id
         }
-        console.log(`🔧 Item ${index}:`, itemData)
+        addDebugLog('ITEM', `Item ${index}`, itemData)
         return itemData
       })
 
-      console.log('📤 Salvando orçamento:', {
+      addDebugLog('PAYLOAD', 'Salvando orçamento', {
         client_id: quote.client_id,
         description: quote.description,
         status: quote.status,
@@ -406,7 +406,7 @@ export const useQuoteLogic = () => {
 
       if (isNew) {
         // Create new quote with all items at once
-        console.log('🚀 Chamando createQuote...')
+        addDebugLog('ACTION', 'Criando novo orçamento')
         const data = await createQuote({
           client_id: quote.client_id,
           description: quote.description,
@@ -420,7 +420,7 @@ export const useQuoteLogic = () => {
           total: calculatedTotal,
           items: itemsToSave
         })
-        console.log('✅ Orçamento criado com sucesso:', data)
+        addDebugLog('SUCCESS', 'Orçamento criado', { id: data.id, quote_number: data.quote_number })
         setQuote(prev => ({ ...prev, id: data.id, quote_number: data.quote_number }))
         setItems([]) // Clear local items as they are now saved
         alert(`Orçamento ${data.quote_number} criado com sucesso!`)
@@ -428,7 +428,7 @@ export const useQuoteLogic = () => {
         setTimeout(() => navigate('/admin/orcamentos'), 1000)
       } else {
         // Update existing quote with all items (replace all)
-        console.log('🔄 Chamando updateQuote para id:', id)
+        addDebugLog('ACTION', 'Atualizando orçamento', { id })
         await updateQuote(id, {
           client_id: quote.client_id,
           description: quote.description,
@@ -443,13 +443,11 @@ export const useQuoteLogic = () => {
           items: itemsToSave
         })
         setItems([]) // Clear pending changes
-        console.log('✅ Orçamento atualizado com sucesso')
+        addDebugLog('SUCCESS', 'Orçamento atualizado')
         alert('Orçamento salvo com sucesso!')
       }
     } catch (error) {
-      console.error('❌ Erro ao salvar orçamento:', error)
-      console.error('📋 Stack trace:', error?.stack)
-      console.error('🔍 Error details:', JSON.stringify(error, null, 2))
+      addDebugLog('ERROR', 'Erro ao salvar orçamento', { message: error.message, code: error.code, stack: error.stack })
       alert(`Erro ao salvar: ${error.message || error.code || 'Erro desconhecido'}`)
     } finally {
       setSaving(false)
@@ -473,6 +471,7 @@ export const useQuoteLogic = () => {
     materialSearch,
     selectedServices,
     selectedMaterials,
+    debugLogs,
 
     // Setters
     setShowServiceSelector,

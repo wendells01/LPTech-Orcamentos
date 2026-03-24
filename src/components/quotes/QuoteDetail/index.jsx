@@ -24,6 +24,7 @@ export const QuoteDetail = () => {
     materialSearch,
     selectedServices,
     selectedMaterials,
+    debugLogs,
 
     // Setters
     setShowServiceSelector,
@@ -91,6 +92,47 @@ export const QuoteDetail = () => {
         onSave={handleSaveQuote}
         onCancel={handleCancel}
       />
+
+      {/* 🔧 DEBUG PANEL - VISÍVEL NO IPHONE */}
+      {debugLogs.length > 0 && (
+        <div className="bg-slate-800 border-2 border-teal-500 rounded-lg p-4 shadow-lg">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              <span className="text-base font-bold text-teal-400">🔧 DEBUG LOGS</span>
+            </div>
+            <button
+              onClick={() => {/* clear logs controlled by component */}}
+              className="text-xs text-slate-400 hover:text-white"
+            >
+              {debugLogs.length} registros
+            </button>
+          </div>
+          <div className="space-y-1 max-h-64 overflow-y-auto bg-slate-900/50 p-3 rounded font-mono text-xs">
+            {debugLogs.slice(-20).map((log, idx) => (
+              <div key={idx} className={`flex gap-2 ${
+                log.type === 'ERROR' ? 'text-red-400' :
+                log.type === 'SUCCESS' ? 'text-green-400' :
+                log.type === 'WARN' ? 'text-amber-400' :
+                log.type === 'ITEM' ? 'text-blue-300' :
+                log.type === 'PAYLOAD' ? 'text-purple-300' :
+                'text-slate-300'
+              }`}>
+                <span className="text-slate-500 shrink-0">[{log.timestamp}]</span>
+                <span className="shrink-0">{log.type}:</span>
+                <span className="text-white">{log.message}</span>
+                {log.data && (
+                  <pre className="text-slate-400 overflow-auto text-[10px] leading-tight whitespace-pre-wrap">
+                    {JSON.stringify(log.data, null, 2).slice(0, 300)}
+                  </pre>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
