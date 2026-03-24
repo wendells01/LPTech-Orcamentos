@@ -6,7 +6,11 @@
       "Bash(npm run:*)",
       "Bash(npm uninstall:*)",
       "Bash(npm install:*)",
-      "Bash(sudo chown:*)"
+      "Bash(sudo chown:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(git clean:*)",
+      "Bash(wc -l /home/ubuntu/orcamentos/src/pages/admin/*.jsx)"
     ]
   }
 }

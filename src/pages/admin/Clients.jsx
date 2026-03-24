@@ -10,26 +10,57 @@ import { Modal } from '../../components/common/Modal.jsx'
 export const Clients = () => {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [search, setSearch] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [lastDoc, setLastDoc] = useState(null)
+  const [hasMore, setHasMore] = useState(true)
 
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchClients()
+    resetAndFetch()
   }, [search])
 
-  const fetchClients = async () => {
-    setLoading(true)
+  const resetAndFetch = async () => {
+    setLastDoc(null)
+    setHasMore(true)
+    await fetchClients(false)
+  }
+
+  const fetchClients = async (isLoadingMore = false) => {
+    if (isLoadingMore) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
+
     try {
-      const data = await getClients()
-      setClients(data || [])
+      const result = await getClients(20, lastDoc || undefined)
+
+      if (isLoadingMore) {
+        setClients(prev => [...prev, ...result.data])
+      } else {
+        setClients(result.data)
+      }
+
+      setLastDoc(result.lastDoc)
+      setHasMore(result.hasMore)
     } catch (error) {
       console.error('Error fetching clients:', error)
-      setClients([])
+      if (!isLoadingMore) {
+        setClients([])
+      }
     } finally {
       setLoading(false)
+      setLoadingMore(false)
+    }
+  }
+
+  const handleLoadMore = () => {
+    if (hasMore && !loadingMore) {
+      fetchClients(true)
     }
   }
 
@@ -179,6 +210,20 @@ export const Clients = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {!loading && hasMore && filteredClients.length > 0 && (
+          <div className="flex justify-center p-4 border-t border-slate-700">
+            <Button
+              variant="secondary"
+              onClick={handleLoadMore}
+              loading={loadingMore}
+              disabled={!hasMore || loadingMore}
+            >
+              {loadingMore ? 'Carregando...' : 'Carregar mais'}
+            </Button>
           </div>
         )}
       </div>

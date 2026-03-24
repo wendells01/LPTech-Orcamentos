@@ -164,3 +164,50 @@ Criar um sistema de orçamentos REAL, utilizável no dia a dia da empresa, com f
 - simplicidade
 - confiabilidade
 - escalabilidade futura
+
+## ⚠️ Regras Críticas de Contexto
+
+- Nunca tentar analisar ou modificar o projeto inteiro de uma vez
+- Sempre trabalhar em tarefas pequenas e isoladas
+- Evitar prompts genéricos como:
+  - “analise tudo”
+  - “corrija tudo”
+  - “otimize tudo”
+
+### Regra principal:
+> Quanto maior o projeto, menor deve ser o escopo do prompt
+
+---
+
+## 🔄 Gerenciamento de Contexto
+
+### Sempre que notar:
+- respostas estranhas
+- perda de contexto
+- erro de token
+- lentidão nas respostas
+
+Execute:
+```bash
+/restart
+
+## Execution Rules
+
+- Never consider a task finished if build fails
+
+---
+
+- Do NOT ask for permission to run git commands and npm commands
+
+---
+
+## UI/UX Rules
+
+- Always use UI/UX PRO MAX skill for any design-related change
+
+Applies to:
+- layout
+- components
+- navigation
+- responsiveness
+- visual refinements

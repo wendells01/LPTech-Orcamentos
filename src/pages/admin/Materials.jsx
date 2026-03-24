@@ -10,26 +10,57 @@ import { Modal } from '../../components/common/Modal.jsx'
 export const Materials = () => {
   const [materials, setMaterials] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [search, setSearch] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [lastDoc, setLastDoc] = useState(null)
+  const [hasMore, setHasMore] = useState(true)
 
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchMaterials()
+    resetAndFetch()
   }, [search])
 
-  const fetchMaterials = async () => {
-    setLoading(true)
+  const resetAndFetch = async () => {
+    setLastDoc(null)
+    setHasMore(true)
+    await fetchMaterials(false)
+  }
+
+  const fetchMaterials = async (isLoadingMore = false) => {
+    if (isLoadingMore) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
+
     try {
-      const data = await getMaterials()
-      setMaterials(data || [])
+      const result = await getMaterials(20, lastDoc || undefined)
+
+      if (isLoadingMore) {
+        setMaterials(prev => [...prev, ...result.data])
+      } else {
+        setMaterials(result.data)
+      }
+
+      setLastDoc(result.lastDoc)
+      setHasMore(result.hasMore)
     } catch (error) {
       console.error('Error fetching materials:', error)
-      setMaterials([])
+      if (!isLoadingMore) {
+        setMaterials([])
+      }
     } finally {
       setLoading(false)
+      setLoadingMore(false)
+    }
+  }
+
+  const handleLoadMore = () => {
+    if (hasMore && !loadingMore) {
+      fetchMaterials(true)
     }
   }
 
@@ -179,6 +210,20 @@ export const Materials = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {!loading && hasMore && filteredMaterials.length > 0 && (
+          <div className="flex justify-center p-4 border-t border-slate-700">
+            <Button
+              variant="secondary"
+              onClick={handleLoadMore}
+              loading={loadingMore}
+              disabled={!hasMore || loadingMore}
+            >
+              {loadingMore ? 'Carregando...' : 'Carregar mais'}
+            </Button>
           </div>
         )}
       </div>

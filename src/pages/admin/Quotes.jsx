@@ -11,25 +11,44 @@ import { QuoteFilters } from '../../components/quotes/QuoteFilters.jsx'
 export const Quotes = () => {
   const [quotes, setQuotes] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedStatuses, setSelectedStatuses] = useState([])
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [lastDoc, setLastDoc] = useState(null)
+  const [hasMore, setHasMore] = useState(true)
 
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchQuotes()
+    resetAndFetch()
   }, [search, selectedStatuses])
 
-  const fetchQuotes = async () => {
-    setLoading(true)
+  const resetAndFetch = async () => {
+    setLastDoc(null)
+    setHasMore(true)
+    await fetchQuotes(false) // false = first page
+  }
+
+  const fetchQuotes = async (isLoadingMore = false) => {
+    if (isLoadingMore) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
+
     try {
-      // Fetch quotes and clients separately
-      const [quotesData, clientsData] = await Promise.all([
-        getQuotes({
+      const result = await getQuotes(
+        {
           status: selectedStatuses.length > 0 ? selectedStatuses : undefined,
-        }),
+        },
+        20, // limit
+        lastDoc || undefined // startAfter
+      )
+
+      const [quotesData, clientsData] = await Promise.all([
+        Promise.resolve(result.data),
         getClients()
       ])
 
@@ -56,12 +75,28 @@ export const Quotes = () => {
         )
       }
 
-      setQuotes(filteredQuotes)
+      if (isLoadingMore) {
+        setQuotes(prev => [...prev, ...filteredQuotes])
+      } else {
+        setQuotes(filteredQuotes)
+      }
+
+      setLastDoc(result.lastDoc)
+      setHasMore(result.hasMore)
     } catch (error) {
       console.error('Error fetching quotes:', error)
-      setQuotes([])
+      if (!isLoadingMore) {
+        setQuotes([])
+      }
     } finally {
       setLoading(false)
+      setLoadingMore(false)
+    }
+  }
+
+  const handleLoadMore = () => {
+    if (hasMore && !loadingMore) {
+      fetchQuotes(true)
     }
   }
 
@@ -218,6 +253,20 @@ export const Quotes = () => {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {!loading && hasMore && quotes.length > 0 && (
+          <div className="flex justify-center p-4 border-t border-slate-700">
+            <Button
+              variant="secondary"
+              onClick={handleLoadMore}
+              loading={loadingMore}
+              disabled={!hasMore || loadingMore}
+            >
+              {loadingMore ? 'Carregando...' : 'Carregar mais'}
+            </Button>
           </div>
         )}
       </div>

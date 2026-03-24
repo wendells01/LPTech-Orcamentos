@@ -29,10 +29,21 @@ const snapshotToArray = (snapshot: DocumentSnapshot<DocumentData>[]) => {
 };
 
 // Clients collection operations - using quote_clients
-export const getClients = async () => {
-  const q = query(collection(db, 'quote_clients'), orderBy('name'));
+export const getClients = async (limit?: number, startAfter?: DocumentSnapshot) => {
+  const constraints: QueryConstraint[] = [orderBy('name')];
+  if (limit) {
+    constraints.push(limit(limit));
+  }
+  if (startAfter) {
+    constraints.push(startAfter(startAfter));
+  }
+  const q = query(collection(db, 'quote_clients'), ...constraints);
   const snapshot = await getDocs(q);
-  return snapshotToArray(snapshot);
+  return {
+    data: snapshotToArray(snapshot),
+    lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
+    hasMore: snapshot.docs.length === (limit || Number.MAX_SAFE_INTEGER)
+  };
 };
 
 export const getClient = async (id: string) => {
@@ -63,10 +74,21 @@ export const deleteClient = async (id: string) => {
 };
 
 // Services collection operations
-export const getServices = async () => {
-  const q = query(collection(db, 'services'), orderBy('name'));
+export const getServices = async (limit?: number, startAfter?: DocumentSnapshot) => {
+  const constraints: QueryConstraint[] = [orderBy('name')];
+  if (limit) {
+    constraints.push(limit(limit));
+  }
+  if (startAfter) {
+    constraints.push(startAfter(startAfter));
+  }
+  const q = query(collection(db, 'services'), ...constraints);
   const snapshot = await getDocs(q);
-  return snapshotToArray(snapshot);
+  return {
+    data: snapshotToArray(snapshot),
+    lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
+    hasMore: snapshot.docs.length === (limit || Number.MAX_SAFE_INTEGER)
+  };
 };
 
 export const getService = async (id: string) => {
@@ -98,10 +120,21 @@ export const deleteService = async (id: string) => {
 };
 
 // Materials collection operations
-export const getMaterials = async () => {
-  const q = query(collection(db, 'materials'), orderBy('name'));
+export const getMaterials = async (limit?: number, startAfter?: DocumentSnapshot) => {
+  const constraints: QueryConstraint[] = [orderBy('name')];
+  if (limit) {
+    constraints.push(limit(limit));
+  }
+  if (startAfter) {
+    constraints.push(startAfter(startAfter));
+  }
+  const q = query(collection(db, 'materials'), ...constraints);
   const snapshot = await getDocs(q);
-  return snapshotToArray(snapshot);
+  return {
+    data: snapshotToArray(snapshot),
+    lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
+    hasMore: snapshot.docs.length === (limit || Number.MAX_SAFE_INTEGER)
+  };
 };
 
 export const getMaterial = async (id: string) => {
@@ -197,13 +230,21 @@ export const generateQuoteNumber = () => {
 export const getQuotes = async (filters?: {
   status?: string[];
   search?: string;
-}) => {
+}, limit?: number, startAfter?: DocumentSnapshot) => {
   const baseQueryConstraints: QueryConstraint[] = [
     orderBy('createdAt', 'desc')
   ];
 
   if (filters?.status && filters.status.length > 0) {
     baseQueryConstraints.push(where('status', 'in', filters.status));
+  }
+
+  if (limit) {
+    baseQueryConstraints.push(limit(limit));
+  }
+
+  if (startAfter) {
+    baseQueryConstraints.push(startAfter(startAfter));
   }
 
   const q = query(collection(db, 'quotes'), ...baseQueryConstraints);
@@ -219,7 +260,11 @@ export const getQuotes = async (filters?: {
     );
   }
 
-  return quotes;
+  return {
+    data: quotes,
+    lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
+    hasMore: snapshot.docs.length === (limit || Number.MAX_SAFE_INTEGER)
+  };
 };
 
 export const getQuote = async (id: string) => {
