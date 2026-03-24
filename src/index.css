@@ -2,16 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Reset global - garantir viewport completa */
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Usar dynamic viewport height para mobile (Safari) */
+html {
+  height: -webkit-fill-available;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #0f172a; /* slate-900 */
+  color: #e2e8f0;
 }
 
-/* Dark theme base */
-.dark body {
-  background-color: #0f172a;
-  color: #e2e8f0;
+/* Garantir que root preencha viewport inteira including safe areas */
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
 }
 
 /* Custom scrollbar - dark mode */
@@ -33,31 +52,43 @@ body {
   background: #64748b;
 }
 
-/* Form inputs in dark mode */
-.dark input,
-.dark select,
-.dark textarea {
+/* Form inputs - dark mode mais consistente */
+input,
+select,
+textarea {
   background-color: #1e293b;
   border-color: #334155;
   color: #e2e8f0;
 }
 
-.dark input:focus,
-.dark select:focus,
-.dark textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   border-color: #14b8a6;
-  ring-color: #14b8a6;
+  outline: none;
+  ring: 2px solid #14b8a6;
 }
 
-/* Tables in dark mode */
-.dark table {
+/* Tables - dark mode */
+table {
   color: #e2e8f0;
 }
 
-.dark thead {
+thead {
   background-color: #1e293b;
 }
 
-.dark tbody tr:hover {
+tbody tr:hover {
   background-color: #1e293b;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection color */
+::selection {
+  background-color: rgba(20, 184, 166, 0.3);
+  color: #e2e8f0;
 }

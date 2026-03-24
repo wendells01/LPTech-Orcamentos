@@ -30,27 +30,28 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
-        {/* Overlay */}
+        {/* Overlay with blur */}
         <div
-          className="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"
+          className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm transition-opacity"
           onClick={onClose}
         ></div>
 
-        {/* Modal */}
-        <div className={`relative bg-slate-800 rounded-lg shadow-xl w-full ${sizeStyles[size]} transform transition-all z-10 border border-slate-700`}>
+        {/* Modal with entrance animation */}
+        <div className={`relative bg-slate-800 rounded-2xl shadow-2xl w-full ${sizeStyles[size]} transform transition-all z-10 border border-slate-700 animate-in fade-in zoom-in-95 duration-200`}>
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-slate-700">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-700">
             <h3 className="text-lg font-semibold text-white">{title}</h3>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white focus:outline-none"
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-full transition-all focus:outline-none"
+              aria-label="Fechar"
             >
-              <X size={24} />
+              <X size={20} />
             </button>
           </div>
 
           {/* Content */}
-          <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="p-4 sm:p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
             {children}
           </div>
         </div>

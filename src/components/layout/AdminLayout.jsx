@@ -4,24 +4,16 @@ import {
   LayoutDashboard,
   FileText,
   Users,
-  LogOut,
   Menu,
-  X,
-  ChevronDown,
-  Plus,
-  Calendar,
-  ClipboardList,
-  Wrench,
-  Package,
-  UserCircle,
-  CreditCard
+  X
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth.jsx'
+import { FullScreenMenu } from './FullScreenMenu.jsx'
 
 export const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -31,73 +23,11 @@ export const AdminLayout = ({ children }) => {
     { name: 'Clientes', href: '/admin/clientes', icon: Users },
   ]
 
-  const userMenuSections = [
-    {
-      title: 'Orçamentos',
-      items: [
-        { name: 'Add new quote', href: '/admin/orcamentos/novo', icon: Plus },
-        { name: 'Quotes list', href: '/admin/orcamentos', icon: FileText },
-      ]
-    },
-    {
-      title: 'Agenda',
-      items: [
-        { name: 'Add new appointment', href: '#', icon: Plus },
-        { name: 'Appointments', href: '#', icon: Calendar },
-      ]
-    },
-    {
-      title: 'Clientes',
-      items: [
-        { name: 'Add new client', href: '/admin/clientes/novo', icon: Plus },
-        { name: 'Clients list', href: '/admin/clientes', icon: Users },
-      ]
-    },
-    {
-      title: 'Serviços',
-      items: [
-        { name: 'Add new service', href: '/admin/servicos/novo', icon: Plus },
-        { name: 'Services list', href: '/admin/servicos', icon: Wrench },
-      ]
-    },
-    {
-      title: 'Materiais',
-      items: [
-        { name: 'Add new material', href: '/admin/materiais/novo', icon: Plus },
-        { name: 'Materials list', href: '/admin/materiais', icon: Package },
-      ]
-    },
-    {
-      title: 'Minha conta',
-      items: [
-        { name: 'Profile', href: '#', icon: UserCircle },
-      ]
-    },
-    {
-      title: 'Planos',
-      items: [
-        { name: 'View plans', href: '#', icon: CreditCard },
-      ]
-    },
-  ]
-
-  const isActive = (href) => {
-    if (href === '/admin/dashboard') {
-      return location.pathname === href
-    }
-    return location.pathname.startsWith(href)
-  }
-
-  const handleLogout = async () => {
-    await logout()
-    navigate('/admin/login')
-  }
-
   const userEmail = user?.email || 'usuário@email.com'
   const userName = userEmail.split('@')[0]
 
   return (
-    <div className="h-screen flex bg-slate-900">
+    <div className="h-screen flex bg-slate-900 min-h-screen">
       {/* Sidebar mobile */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -112,7 +42,7 @@ export const AdminLayout = ({ children }) => {
             <nav className="flex-1 px-4 py-4 space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon
-                const active = isActive(item.href)
+                const active = location.pathname === item.href || location.pathname.startsWith(item.href)
                 return (
                   <Link
                     key={item.name}
@@ -143,7 +73,7 @@ export const AdminLayout = ({ children }) => {
           <nav className="flex-1 px-4 py-4 space-y-1">
             {navigation.map((item) => {
               const Icon = item.icon
-              const active = isActive(item.href)
+              const active = location.pathname === item.href || location.pathname.startsWith(item.href)
               return (
                 <Link
                   key={item.name}
@@ -177,74 +107,20 @@ export const AdminLayout = ({ children }) => {
               </button>
             </div>
 
-            {/* User menu */}
+            {/* User menu trigger */}
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center space-x-2 text-sm text-slate-300 hover:text-white focus:outline-none"
+                aria-label="Menu do usuário"
               >
-                <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-500/30">
                   <span className="text-white font-medium text-sm">
                     {userName.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <span className="hidden md:block">{userName}</span>
-                <ChevronDown size={16} />
               </button>
-
-              {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-72 py-2 bg-slate-700 rounded-md shadow-lg border border-slate-600 z-50 max-h-[80vh] overflow-y-auto">
-                  <div className="px-4 py-3 border-b border-slate-600">
-                    <p className="text-sm font-medium text-white">{userName}</p>
-                    <p className="text-xs text-slate-400 truncate">{userEmail}</p>
-                  </div>
-
-                  {userMenuSections.map((section, idx) => (
-                    <div key={idx}>
-                      <p className="px-4 py-2 text-xs font-semibold text-teal-400 uppercase tracking-wider">
-                        {section.title}
-                      </p>
-                      {section.items.map((item, itemIdx) => {
-                        const Icon = item.icon
-                        const active = isActive(item.href)
-                        return (
-                          <Link
-                            key={itemIdx}
-                            to={item.href}
-                            onClick={() => {
-                              setUserMenuOpen(false)
-                              if (item.href !== '#') {
-                                // Navigate normally
-                              } else {
-                                // Placeholder - could show alert
-                                alert('Página em desenvolvimento')
-                              }
-                            }}
-                            className={`flex items-center px-4 py-2 text-sm ${
-                              active
-                                ? 'bg-teal-600/20 text-teal-400'
-                                : 'text-slate-300 hover:bg-slate-600'
-                            }`}
-                          >
-                            <Icon className="mr-3 h-4 w-4" />
-                            {item.name}
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  ))}
-
-                  <div className="border-t border-slate-600 mt-2 pt-2">
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center w-full px-4 py-2 text-sm text-slate-300 hover:bg-slate-600"
-                    >
-                      <LogOut className="mr-3 h-4 w-4" />
-                      Sair
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </header>
@@ -254,6 +130,9 @@ export const AdminLayout = ({ children }) => {
           {children}
         </main>
       </div>
+
+      {/* Full Screen Menu Overlay */}
+      <FullScreenMenu isOpen={userMenuOpen} onClose={() => setUserMenuOpen(false)} />
     </div>
   )
 }

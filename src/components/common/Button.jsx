@@ -11,20 +11,20 @@ export const Button = ({
   className = '',
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
 
   const variantStyles = {
-    primary: 'bg-teal-600 text-white hover:bg-teal-700 focus:ring-teal-500 focus:ring-offset-slate-800',
-    secondary: 'bg-slate-700 text-white hover:bg-slate-600 focus:ring-slate-500',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-    outline: 'border border-slate-600 text-slate-300 hover:bg-slate-700 focus:ring-teal-500',
-    ghost: 'text-slate-300 hover:bg-slate-700 focus:ring-slate-500',
+    primary: 'bg-gradient-to-r from-teal-600 to-teal-500 text-white hover:from-teal-700 hover:to-teal-600 focus:ring-teal-400 focus:ring-offset-slate-900 shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 hover:scale-[1.02] active:scale-[0.98]',
+    secondary: 'bg-slate-700 text-white hover:bg-slate-600 hover:shadow-lg hover:shadow-slate-500/20 focus:ring-slate-500',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-lg shadow-red-500/30 hover:shadow-red-500/50',
+    outline: 'border-2 border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400 focus:ring-teal-400',
+    ghost: 'text-slate-300 hover:text-white hover:bg-slate-700/50 focus:ring-slate-500',
   }
 
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
+    sm: 'px-3 py-1.5 text-sm min-h-[36px]',
+    md: 'px-4 py-2.5 text-base min-h-[44px]',
+    lg: 'px-6 py-3.5 text-lg min-h-[48px]',
   }
 
   return (

@@ -22,8 +22,8 @@ export const Input = ({
       )}
       <input
         id={inputId}
-        className={`block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm ${
-          error ? 'border-red-500 text-red-400 focus:border-red-400 focus:ring-red-400' : ''
+        className={`block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-0 sm:text-sm transition-all ${
+          error ? 'border-red-500 text-red-400 focus:border-red-400 focus:ring-red-500/50' : ''
         }`}
         {...props}
       />
@@ -59,8 +59,8 @@ export const Textarea = ({
       )}
       <textarea
         id={inputId}
-        className={`block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm ${
-          error ? 'border-red-500 text-red-400 focus:border-red-400 focus:ring-red-400' : ''
+        className={`block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-0 sm:text-sm transition-all ${
+          error ? 'border-red-500 text-red-400 focus:border-red-400 focus:ring-red-500/50' : ''
         }`}
         rows={3}
         {...props}
@@ -98,8 +98,8 @@ export const Select = ({
       )}
       <select
         id={selectId}
-        className={`block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm ${
-          error ? 'border-red-500 text-red-400 focus:border-red-400 focus:ring-red-400' : ''
+        className={`block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-0 sm:text-sm transition-all ${
+          error ? 'border-red-500 text-red-400 focus:border-red-400 focus:ring-red-500/50' : ''
         }`}
         {...props}
       >

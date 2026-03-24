@@ -95,7 +95,7 @@ export const Quotes = () => {
         <Link to="/admin/orcamentos/novo">
           <Button size="lg">
             <Plus className="mr-2 h-5 w-5" />
-            Novo Orçamento
+            Novo orçamento
           </Button>
         </Link>
       </div>
@@ -128,7 +128,7 @@ export const Quotes = () => {
                 <Link to="/admin/orcamentos/novo">
                   <Button>
                     <Plus className="mr-2 h-5 w-5" />
-                    Criar Orçamento
+                    Criar orçamento
                   </Button>
                 </Link>
               </div>
