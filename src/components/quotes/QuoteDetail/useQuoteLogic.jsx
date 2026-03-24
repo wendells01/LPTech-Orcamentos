@@ -369,16 +369,26 @@ export const useQuoteLogic = () => {
     setSaving(true)
     try {
       // Prepare items for saving (ensure total is calculated)
-      const itemsToSave = items.map(item => ({
-        type: item.type,
-        description: item.description,
-        quantity: Number(item.quantity),
-        unit_price: Number(item.unit_price),
-        unit: item.unit || '',
-        total: Number(item.total !== undefined ? item.total : item.quantity * item.unit_price),
-        ...(item.type === 'service' && { service_id: item.service_id }),
-        ...(item.type === 'material' && { material_id: item.material_id }),
-      }))
+      console.log('🔧 Preparando itens para salvar...')
+      const itemsToSave = items.map((item, index) => {
+        const total = item.total !== undefined ? Number(item.total) : Number(item.quantity) * Number(item.unit_price)
+        const itemData = {
+          type: item.type,
+          description: item.description,
+          quantity: Number(item.quantity),
+          unit_price: Number(item.unit_price),
+          unit: item.unit || '',
+          total: total,
+          display_order: index
+        }
+        if (item.type === 'service') {
+          itemData.service_id = item.service_id
+        } else if (item.type === 'material') {
+          itemData.material_id = item.material_id
+        }
+        console.log(`🔧 Item ${index}:`, itemData)
+        return itemData
+      })
 
       console.log('📤 Salvando orçamento:', {
         client_id: quote.client_id,
@@ -391,11 +401,12 @@ export const useQuoteLogic = () => {
         subtotal_services: calculatedServices,
         subtotal_materials: calculatedMaterials,
         total: calculatedTotal,
-        items: itemsToSave
+        itemsCount: itemsToSave.length
       })
 
       if (isNew) {
         // Create new quote with all items at once
+        console.log('🚀 Chamando createQuote...')
         const data = await createQuote({
           client_id: quote.client_id,
           description: quote.description,
@@ -417,6 +428,7 @@ export const useQuoteLogic = () => {
         setTimeout(() => navigate('/admin/orcamentos'), 1000)
       } else {
         // Update existing quote with all items (replace all)
+        console.log('🔄 Chamando updateQuote para id:', id)
         await updateQuote(id, {
           client_id: quote.client_id,
           description: quote.description,
@@ -436,7 +448,9 @@ export const useQuoteLogic = () => {
       }
     } catch (error) {
       console.error('❌ Erro ao salvar orçamento:', error)
-      alert(`Erro ao salvar: ${error.message}`)
+      console.error('📋 Stack trace:', error?.stack)
+      console.error('🔍 Error details:', JSON.stringify(error, null, 2))
+      alert(`Erro ao salvar: ${error.message || error.code || 'Erro desconhecido'}`)
     } finally {
       setSaving(false)
     }
