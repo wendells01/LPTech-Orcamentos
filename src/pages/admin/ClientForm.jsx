@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Save, AlertCircle, Bug } from 'lucide-react'
+import { ArrowLeft, Save, AlertCircle, Bug, Mail, Lock, User } from 'lucide-react'
 import { getClient, createClient, updateClient } from '../../lib/firebase/queries.js'
 import { Button } from '../../components/common/Button.jsx'
 import { Input, Textarea } from '../../components/common/Input.jsx'
@@ -18,6 +18,7 @@ export const ClientForm = () => {
   const [error, setError] = useState(null)
   const [authError, setAuthError] = useState(null)
   const [debugInfo, setDebugInfo] = useState(null)
+  const [lastOperation, setLastOperation] = useState(null)
 
   const [client, setClient] = useState({
     name: '',
@@ -30,20 +31,16 @@ export const ClientForm = () => {
     complement: '',
   })
 
-  // DEBUG: mostrar info de autenticação na tela
+  // DEBUG: mostrar info de autenticação
   useEffect(() => {
-    console.log('🔍 ClientForm DEBUG:', {
-      user: user ? { uid: user.uid, email: user.email } : null,
+    const debug = {
+      user: user ? { email: user.email, uid: user.uid?.slice(0, 10) + '...' } : null,
       isEditing,
       id,
-      params: useParams()
-    })
-    setDebugInfo({
-      user: user ? { email: user.email, uid: user.uid?.slice(0, 8) + '...' } : null,
-      isEditing,
-      id,
-      timestamp: new Date().toISOString()
-    })
+      timestamp: new Date().toLocaleTimeString('pt-BR')
+    }
+    setDebugInfo(debug)
+    console.log('🔍 ClientForm DEBUG:', debug)
   }, [user, isEditing, id])
 
   useEffect(() => {
@@ -55,11 +52,14 @@ export const ClientForm = () => {
   const loadClient = async () => {
     try {
       if (!user) {
-        setAuthError('Você não está autenticado. Faça login novamente.')
-        navigate('/admin/login')
+        const msg = '⚠️ VOCÊ NÃO ESTÁ LOGADO! Faça login primeiro.'
+        setAuthError(msg)
+        setLastOperation({ type: 'LOAD', status: 'FAILED', message: msg, timestamp: new Date().toLocaleTimeString() })
+        setTimeout(() => navigate('/admin/login'), 2000)
         return
       }
       console.log('🔍 Loading client with id:', id)
+      setLastOperation({ type: 'LOAD', status: 'STARTED', message: `Buscando cliente ${id}...`, timestamp: new Date().toLocaleTimeString() })
       const data = await getClient(id)
       if (!data) {
         alert('Cliente não encontrado')
@@ -76,8 +76,10 @@ export const ClientForm = () => {
         number: data.number || '',
         complement: data.complement || '',
       })
+      setLastOperation({ type: 'LOAD', status: 'SUCCESS', message: `Cliente "${data.name}" carregado`, timestamp: new Date().toLocaleTimeString() })
     } catch (error) {
       console.error('Error loading client:', error)
+      setLastOperation({ type: 'LOAD', status: 'ERROR', message: error.message, details: error.code, timestamp: new Date().toLocaleTimeString() })
       alert('Erro ao carregar cliente')
       navigate('/admin/clientes')
     } finally {
@@ -95,8 +97,9 @@ export const ClientForm = () => {
     setAuthError(null)
 
     if (!user) {
-      const msg = 'Você precisa estar logado para cadastrar clientes'
+      const msg = '❌ VOCÊ PRECISA ESTAR LOGADO para cadastrar clientes'
       setAuthError(msg)
+      setLastOperation({ type: 'SAVE', status: 'FAILED', message: msg, timestamp: new Date().toLocaleTimeString() })
       alert(msg)
       console.error('❌ Unauthorized: no user')
       return
@@ -104,12 +107,14 @@ export const ClientForm = () => {
 
     if (!client.name.trim()) {
       setError('O nome do cliente é obrigatório')
+      setLastOperation({ type: 'SAVE', status: 'FAILED', message: 'Nome não informado', timestamp: new Date().toLocaleTimeString() })
       return
     }
 
     // Validação adicional: pelo menos cidade e rua para endereço completo
     if (!client.city.trim() || !client.street.trim()) {
       setError('Cidade e Rua são obrigatórios para o endereço')
+      setLastOperation({ type: 'SAVE', status: 'FAILED', message: 'Cidade e Rua obrigatórios', timestamp: new Date().toLocaleTimeString() })
       return
     }
 
@@ -119,24 +124,54 @@ export const ClientForm = () => {
       console.log('👤 User auth status:', user ? { email: user.email, uid: user.uid } : 'NOT AUTHENTICATED')
       console.log('📤 Operation:', isEditing ? 'UPDATE' : 'CREATE')
 
+      setLastOperation({
+        type: 'SAVE',
+        status: 'STARTED',
+        message: `Enviando para Firebase...`,
+        details: `Operação: ${isEditing ? 'UPDATE' : 'CREATE'}`,
+        timestamp: new Date().toLocaleTimeString()
+      })
+
       if (isEditing) {
         const result = await updateClient(id, client)
         console.log('✅ Update result:', result)
-        alert('Cliente atualizado com sucesso!')
+        setLastOperation({
+          type: 'SAVE',
+          status: 'SUCCESS',
+          message: `Cliente "${client.name}" atualizado com sucesso!`,
+          details: `ID: ${result.id}`,
+          timestamp: new Date().toLocaleTimeString()
+        })
+        alert('✅ Cliente atualizado com sucesso!')
       } else {
         const result = await createClient(client)
         console.log('✅ Create result:', result)
-        alert(`Cliente "${client.name}" criado com sucesso!`)
+        setLastOperation({
+          type: 'SAVE',
+          status: 'SUCCESS',
+          message: `Cliente "${client.name}" criado com sucesso!`,
+          details: `ID: ${result.id}`,
+          timestamp: new Date().toLocaleTimeString()
+        })
+        alert(`✅ Cliente "${client.name}" criado com sucesso!`)
       }
-      navigate('/admin/clientes')
+      setTimeout(() => navigate('/admin/clientes'), 1500)
     } catch (error) {
       console.error('❌ Save error:', error)
       console.error('📋 Error details:', JSON.stringify(error, null, 2))
       const errorMsg = error?.code || error?.message || 'Erro desconhecido'
-      alert(`Erro ao salvar cliente: ${errorMsg}`)
+      const details = error?.code ? `Código: ${error.code}` : ''
+      setLastOperation({
+        type: 'SAVE',
+        status: 'ERROR',
+        message: errorMsg,
+        details,
+        timestamp: new Date().toLocaleTimeString()
+      })
+      alert(`❌ Erro ao salvar cliente: ${errorMsg}`)
       // Mostra erro específico de autenticação
       if (error?.code === 'permission-denied') {
-        alert('ERRO DE PERMISSÃO: Verifique as regras do Firestore e se você está logado.')
+        alert('🔴 ERRO DE PERMISSÃO: Verifique:\n1. Se você está logado\n2. Se as regras do Firebase permitem escrita\n3. Se sua sessão não expirou')
       }
       setError(`Erro: ${errorMsg}`)
     } finally {
@@ -174,22 +209,81 @@ export const ClientForm = () => {
         </div>
       </div>
 
-      {/* DEBUG PANEL - Mostra estado de autenticação */}
-      <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
-        <div className="flex items-center gap-2 mb-2">
-          <Bug className="h-4 w-4 text-teal-400" />
-          <span className="text-sm font-semibold text-teal-400">DEBUG INFO</span>
+      {/* DEBUG PANEL - Visível e destacado */}
+      <div className="bg-slate-800 p-4 rounded-lg border-2 border-teal-500 shadow-lg">
+        <div className="flex items-center gap-2 mb-3">
+          <Bug className="h-5 w-5 text-teal-400" />
+          <span className="text-base font-bold text-teal-400">🔧 STATUS & DEBUG</span>
         </div>
-        <div className="text-xs space-y-1 text-slate-300 font-mono">
-          <div>User: {debugInfo?.user ? JSON.stringify(debugInfo.user) : 'N/A'}</div>
-          <div>Mode: {isEditing ? 'EDIT' : 'CREATE'}</div>
-          <div>ID param: {id || 'none'}</div>
-          <div>Authenticated: {user ? '✅ YES' : '❌ NO'}</div>
-          <div>Timestamp: {debugInfo?.timestamp}</div>
+
+        {/* Auth Status */}
+        <div className={`p-3 rounded-md mb-3 ${user ? 'bg-green-900/30 border border-green-700' : 'bg-red-900/30 border border-red-700'}`}>
+          <div className="flex items-center gap-2 mb-1">
+            {user ? (
+              <User className="h-4 w-4 text-green-400" />
+            ) : (
+              <Lock className="h-4 w-4 text-red-400" />
+            )}
+            <span className={`text-sm font-semibold ${user ? 'text-green-400' : 'text-red-400'}`}>
+              {user ? '✅ AUTENTICADO' : '❌ NÃO AUTENTICADO'}
+            </span>
+          </div>
+          {user && (
+            <div className="text-xs text-green-300 ml-6">
+              Email: {user.email}<br/>
+              UID: {user.uid?.slice(0, 12)}...
+            </div>
+          )}
+          {!user && (
+            <div className="text-xs text-red-300 ml-6">
+              Faça login em <Link to="/admin/login" className="underline text-red-400">/admin/login</Link>
+            </div>
+          )}
         </div>
+
+        {/* Mode & Params */}
+        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+          <div className="bg-slate-700/50 p-2 rounded">
+            <span className="text-slate-400">Modo:</span>
+            <span className="ml-2 font-mono text-white">{isEditing ? 'EDITAR' : 'NOVO'}</span>
+          </div>
+          <div className="bg-slate-700/50 p-2 rounded">
+            <span className="text-slate-400">ID param:</span>
+            <span className="ml-2 font-mono text-white">{id || 'novo'}</span>
+          </div>
+          <div className="bg-slate-700/50 p-2 rounded col-span-2">
+            <span className="text-slate-400">Timestamp:</span>
+            <span className="ml-2 font-mono text-white">{debugInfo?.timestamp}</span>
+          </div>
+        </div>
+
+        {/* Auth Error */}
         {authError && (
-          <div className="mt-3 p-2 bg-red-900/30 border border-red-700 rounded text-xs text-red-400">
-            ⚠️ {authError}
+          <div className="mb-3 p-3 bg-red-900/40 border-2 border-red-500 rounded-md text-sm text-red-300">
+            <AlertCircle className="inline h-4 w-4 mr-2" />
+            {authError}
+          </div>
+        )}
+
+        {/* Last Operation */}
+        {lastOperation && (
+          <div className={`p-3 rounded-md ${lastOperation.status === 'SUCCESS' ? 'bg-green-900/30 border border-green-700' : lastOperation.status === 'ERROR' ? 'bg-red-900/30 border border-red-700' : 'bg-blue-900/30 border border-blue-700'}`}>
+            <div className="flex items-center gap-2 mb-1">
+              {lastOperation.status === 'STARTED' && <span className="text-blue-400">⏳</span>}
+              {lastOperation.status === 'SUCCESS' && <span className="text-green-400">✅</span>}
+              {lastOperation.status === 'ERROR' && <span className="text-red-400">❌</span>}
+              {lastOperation.status === 'FAILED' && <span className="text-orange-400">⚠️</span>}
+              <span className="text-sm font-semibold">
+                Última Operação: {lastOperation.type} - {lastOperation.status}
+              </span>
+            </div>
+            <div className="text-xs space-y-1">
+              <div><span className="text-slate-400">Mensagem:</span> <span className={lastOperation.status === 'SUCCESS' ? 'text-green-300' : lastOperation.status === 'ERROR' ? 'text-red-300' : 'text-blue-300'}>{lastOperation.message}</span></div>
+              {lastOperation.details && (
+                <div><span className="text-slate-400">Detalhes:</span> <span className="text-yellow-300">{lastOperation.details}</span></div>
+              )}
+              <div><span className="text-slate-400">Horário:</span> <span className="text-slate-300">{lastOperation.timestamp}</span></div>
+            </div>
           </div>
         )}
       </div>
@@ -301,6 +395,19 @@ export const ClientForm = () => {
             </Button>
           </div>
         </form>
+      </div>
+
+      {/* Instructions */}
+      <div className="bg-blue-900/20 border border-blue-500/50 p-4 rounded-lg">
+        <h3 className="text-sm font-semibold text-blue-400 mb-2">📱 Como testar no iPhone:</h3>
+        <ol className="text-sm text-blue-300 space-y-1 list-decimal list-inside">
+          <li>Faça login em <strong>/admin/login</strong></li>
+          <li>Volte para <strong>/admin/clientes/novo</strong></li>
+          <li>Veja o painel <strong>🔧 STATUS & DEBUG</strong> acima</li>
+          <li>Preencha: Nome*, Cidade*, Rua* (obrigatórios)</li>
+          <li>Clique em "Criar"</li>
+          <li>Observe o painel - ele mostrará o que aconteceu</li>
+        </ol>
       </div>
     </div>
   )
