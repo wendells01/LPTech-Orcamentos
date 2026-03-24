@@ -87,7 +87,10 @@ export const Clients = () => {
       (client.name?.toLowerCase() || '').includes(searchLower) ||
       (client.email?.toLowerCase() || '').includes(searchLower) ||
       (client.phone?.toLowerCase() || '').includes(searchLower) ||
-      (client.address?.toLowerCase() || '').includes(searchLower)
+      (client.city?.toLowerCase() || '').includes(searchLower) ||
+      (client.neighborhood?.toLowerCase() || '').includes(searchLower) ||
+      (client.street?.toLowerCase() || '').includes(searchLower) ||
+      (client.number?.toLowerCase() || '').includes(searchLower)
     )
   }, [clients, search])
 
@@ -162,6 +165,9 @@ export const Clients = () => {
                     Telefone
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                    Cidade
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                     Endereço
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-slate-300 uppercase tracking-wider">
@@ -183,9 +189,14 @@ export const Clients = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-slate-300">{client.phone || '-'}</div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-slate-300">{client.city || '-'}</div>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-slate-300 max-w-xs truncate">
-                        {client.address || '-'}
+                        {client.neighborhood ? `${client.neighborhood} - ` : ''}
+                        {client.street || ''} {client.number || ''}
+                        {client.complement ? ` (${client.complement})` : ''}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

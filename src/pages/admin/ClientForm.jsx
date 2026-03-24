@@ -19,7 +19,11 @@ export const ClientForm = () => {
     name: '',
     email: '',
     phone: '',
-    address: '',
+    city: '',
+    neighborhood: '',
+    street: '',
+    number: '',
+    complement: '',
   })
 
   useEffect(() => {
@@ -40,7 +44,11 @@ export const ClientForm = () => {
         name: data.name || '',
         email: data.email || '',
         phone: data.phone || '',
-        address: data.address || '',
+        city: data.city || '',
+        neighborhood: data.neighborhood || '',
+        street: data.street || '',
+        number: data.number || '',
+        complement: data.complement || '',
       })
     } catch (error) {
       console.error('Error loading client:', error)
@@ -122,6 +130,7 @@ export const ClientForm = () => {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Nome */}
             <div className="md:col-span-2">
               <Input
                 label="Nome *"
@@ -132,6 +141,7 @@ export const ClientForm = () => {
               />
             </div>
 
+            {/* Email e Telefone */}
             <div>
               <Input
                 label="Email"
@@ -151,13 +161,52 @@ export const ClientForm = () => {
               />
             </div>
 
+            {/* Endereço - Cidade */}
+            <div>
+              <Input
+                label="Cidade"
+                value={client.city}
+                onChange={(e) => handleChange('city', e.target.value)}
+                placeholder="Cidade"
+              />
+            </div>
+
+            {/* Endereço - Bairro */}
+            <div>
+              <Input
+                label="Bairro"
+                value={client.neighborhood}
+                onChange={(e) => handleChange('neighborhood', e.target.value)}
+                placeholder="Bairro"
+              />
+            </div>
+
+            {/* Endereço - Rua */}
             <div className="md:col-span-2">
-              <Textarea
-                label="Endereço"
-                value={client.address}
-                onChange={(e) => handleChange('address', e.target.value)}
-                placeholder="Endereço completo"
-                rows={3}
+              <Input
+                label="Rua"
+                value={client.street}
+                onChange={(e) => handleChange('street', e.target.value)}
+                placeholder="Nome da rua, avenida, etc."
+              />
+            </div>
+
+            {/* Endereço - Número e Complemento */}
+            <div>
+              <Input
+                label="Número"
+                value={client.number}
+                onChange={(e) => handleChange('number', e.target.value)}
+                placeholder="123"
+              />
+            </div>
+
+            <div>
+              <Input
+                label="Complemento (opcional)"
+                value={client.complement}
+                onChange={(e) => handleChange('complement', e.target.value)}
+                placeholder="Apto, bloco, etc."
               />
             </div>
           </div>

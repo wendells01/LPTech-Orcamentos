@@ -22,9 +22,9 @@ export const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Buscar todos os quotes (para contar e analisar)
-      const allQuotes = await getQuotes()
-      const allClients = await getClients()
+      // Buscar todos os quotes (para contar e analisar) - com limite para performance
+      const { data: allQuotes } = await getQuotes({}, 100) // limite de 100 orçamentos mais recentes
+      const { data: allClients } = await getClients()
 
       // Total de orçamentos e clientes
       const totalQuotes = allQuotes.length

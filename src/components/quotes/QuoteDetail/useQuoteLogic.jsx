@@ -104,8 +104,8 @@ export const useQuoteLogic = () => {
 
   const loadClients = async () => {
     try {
-      const data = await getClients()
-      setClients(data || [])
+      const { data: clientsData } = await getClients()
+      setClients(clientsData || [])
     } catch (error) {
       console.error('Error loading clients:', error)
     }
@@ -113,8 +113,8 @@ export const useQuoteLogic = () => {
 
   const loadServices = async () => {
     try {
-      const data = await getServices()
-      setServices(data || [])
+      const { data: servicesData } = await getServices()
+      setServices(servicesData || [])
     } catch (error) {
       console.error('Error loading services:', error)
     }
@@ -122,8 +122,8 @@ export const useQuoteLogic = () => {
 
   const loadMaterials = async () => {
     try {
-      const data = await getMaterials()
-      setMaterials(data || [])
+      const { data: materialsData } = await getMaterials()
+      setMaterials(materialsData || [])
     } catch (error) {
       console.error('Error loading materials:', error)
     }

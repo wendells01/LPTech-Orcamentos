@@ -11,8 +11,8 @@ export const ClientSelect = ({ value, onChange, error }) => {
 
   const loadClients = async () => {
     try {
-      const data = await getClients()
-      setClients(data || [])
+      const { data: clientsData } = await getClients()
+      setClients(clientsData || [])
     } catch (error) {
       console.error('Error loading clients:', error)
     } finally {
