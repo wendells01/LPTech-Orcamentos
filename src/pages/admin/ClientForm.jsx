@@ -9,7 +9,7 @@ import { Spinner } from '../../components/common/Spinner.jsx'
 export const ClientForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const isEditing = !!id
+  const isEditing = id && id !== 'novo'  // Corrige: 'novo' é criação, não edição
 
   const [loading, setLoading] = useState(isEditing)
   const [saving, setSaving] = useState(false)
