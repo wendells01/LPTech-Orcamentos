@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
-import { getMaterial, createMaterial, updateMaterial } from '../../lib/firebase/queries.js'
+import { getMaterial, createMaterial, updateMaterial } from '../../lib/firebase/queries'
 import { Button } from '../../components/common/Button.jsx'
 import { Input, Textarea } from '../../components/common/Input.jsx'
 import { Spinner } from '../../components/common/Spinner.jsx'

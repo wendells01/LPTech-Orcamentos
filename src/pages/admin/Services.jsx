@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Plus, Edit2, Trash2, Wrench, Search } from 'lucide-react'
-import { getServices, createService, updateService, deleteService } from '../../lib/firebase/queries.js'
+import { getServices, createService, updateService, deleteService } from '../../lib/firebase/queries'
 import { Button } from '../../components/common/Button.jsx'
 import { Input, Textarea } from '../../components/common/Input.jsx'
 import { Spinner } from '../../components/common/Spinner.jsx'

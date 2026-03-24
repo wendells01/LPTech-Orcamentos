@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getClients } from '../../lib/firebase/queries.js'
+import { getClients } from '../../lib/firebase/queries'
 
 export const ClientSelect = ({ value, onChange, error }) => {
   const [clients, setClients] = useState([])
@@ -11,10 +11,13 @@ export const ClientSelect = ({ value, onChange, error }) => {
 
   const loadClients = async () => {
     try {
+      console.log('🔍 ClientSelect: Carregando clientes...')
       const { data: clientsData } = await getClients()
+      console.log('🔍 ClientSelect: Dados recebidos:', clientsData)
       setClients(clientsData || [])
     } catch (error) {
-      console.error('Error loading clients:', error)
+      console.error('❌ Error loading clients:', error)
+      setError(error.message)
     } finally {
       setLoading(false)
     }
@@ -34,7 +37,7 @@ export const ClientSelect = ({ value, onChange, error }) => {
       </option>
       {clients.map(client => (
         <option key={client.id} value={client.id}>
-          {client.company_name || client.name} {client.email && `(${client.email})`}
+          {client.company_name || client.name || 'Sem nome'} {client.email && `(${client.email})`}
         </option>
       ))}
     </select>

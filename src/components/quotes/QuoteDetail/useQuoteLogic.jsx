@@ -10,13 +10,17 @@ import {
   getClients,
   getServices,
   getMaterials
-} from '../../../lib/firebase/queries.js'
+} from '../../../lib/firebase/queries'
 import { calculateTotal } from '../../../lib/utils/formatters.js'
+import { useAuth } from '../../../hooks/useAuth.jsx'
 
 export const useQuoteLogic = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const isNew = id === 'novo'
+
+  console.log('🔍 useQuoteLogic: Inicializando', { id, isNew, user: user?.email })
 
   // Loading states
   const [loading, setLoading] = useState(!isNew)
@@ -104,28 +108,50 @@ export const useQuoteLogic = () => {
 
   const loadClients = async () => {
     try {
+      console.log('🔍 useQuoteLogic: Carregando clientes para orçamento...')
+      if (!user) {
+        console.error('❌ loadClients: Usuário NÃO autenticado!')
+        setError('Você precisa estar logado para carregar clientes')
+        setLoading(false)
+        return
+      }
       const { data: clientsData } = await getClients()
+      console.log('🔍 useQuoteLogic: Clientes carregados:', clientsData?.length || 0, 'clientes')
+      console.log('🔍 useQuoteLogic: Dados dos clientes:', clientsData)
       setClients(clientsData || [])
     } catch (error) {
-      console.error('Error loading clients:', error)
+      console.error('❌ Error loading clients:', error)
+      setError(error.message)
     }
   }
 
   const loadServices = async () => {
     try {
+      console.log('🔍 useQuoteLogic: Carregando serviços...')
+      if (!user) {
+        console.error('❌ loadServices: Usuário NÃO autenticado!')
+        return
+      }
       const { data: servicesData } = await getServices()
+      console.log('🔍 useQuoteLogic: Serviços carregados:', servicesData?.length || 0)
       setServices(servicesData || [])
     } catch (error) {
-      console.error('Error loading services:', error)
+      console.error('❌ Error loading services:', error)
     }
   }
 
   const loadMaterials = async () => {
     try {
+      console.log('🔍 useQuoteLogic: Carregando materiais...')
+      if (!user) {
+        console.error('❌ loadMaterials: Usuário NÃO autenticado!')
+        return
+      }
       const { data: materialsData } = await getMaterials()
+      console.log('🔍 useQuoteLogic: Materiais carregados:', materialsData?.length || 0)
       setMaterials(materialsData || [])
     } catch (error) {
-      console.error('Error loading materials:', error)
+      console.error('❌ Error loading materials:', error)
     }
   }
 
@@ -299,14 +325,24 @@ export const useQuoteLogic = () => {
   }
 
   const handleSaveQuote = async () => {
+    console.log('🚀 handleSaveQuote chamado')
+    console.log('📊 Estado atual:', {
+      client_id: quote.client_id,
+      itemsCount: items.length,
+      items,
+      isNew
+    })
+
     if (!quote.client_id) {
       alert('Selecione um cliente')
+      console.error('❌ Nenhum cliente selecionado')
       return
     }
 
     // Validação: pelo menos um item (serviço ou material)
     if (items.length === 0) {
       alert('Adicione pelo menos um serviço ou material ao orçamento')
+      console.error('❌ Nenhum item no orçamento')
       return
     }
 
@@ -317,6 +353,7 @@ export const useQuoteLogic = () => {
 
     if (invalidItems.length > 0) {
       alert('Todos os itens devem ter quantidade e preço unitário maiores que zero')
+      console.error('❌ Itens inválidos:', invalidItems)
       return
     }
 
@@ -334,6 +371,17 @@ export const useQuoteLogic = () => {
         ...(item.type === 'material' && { material_id: item.material_id }),
       }))
 
+      console.log('📤 Salvando orçamento:', {
+        client_id: quote.client_id,
+        description: quote.description,
+        status: quote.status,
+        issue_date: quote.issue_date,
+        valid_until: quote.valid_until,
+        discount: quote.discount,
+        notes: quote.notes,
+        items: itemsToSave
+      })
+
       if (isNew) {
         // Create new quote with all items at once
         const data = await createQuote({
@@ -346,6 +394,7 @@ export const useQuoteLogic = () => {
           notes: quote.notes,
           items: itemsToSave
         })
+        console.log('✅ Orçamento criado com sucesso:', data)
         setQuote(prev => ({ ...prev, id: data.id, quote_number: data.quote_number }))
         setItems([]) // Clear local items as they are now saved
         alert(`Orçamento ${data.quote_number} criado com sucesso!`)
@@ -364,9 +413,11 @@ export const useQuoteLogic = () => {
           items: itemsToSave
         })
         setItems([]) // Clear pending changes
+        console.log('✅ Orçamento atualizado com sucesso')
         alert('Orçamento salvo com sucesso!')
       }
     } catch (error) {
+      console.error('❌ Erro ao salvar orçamento:', error)
       alert(`Erro ao salvar: ${error.message}`)
     } finally {
       setSaving(false)

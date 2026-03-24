@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { FileText, Users, TrendingUp, Clock, CheckCircle, AlertCircle, XCircle, Play } from 'lucide-react'
-import { getQuotes, getClients } from '../../lib/firebase/queries.js'
+import { getQuotes, getClients } from '../../lib/firebase/queries'
 import { QUOTE_STATUS } from '../../lib/constants/quoteStatus.js'
 import { formatCurrency } from '../../lib/utils/formatters.js'
 import { Spinner } from '../../components/common/Spinner.jsx'

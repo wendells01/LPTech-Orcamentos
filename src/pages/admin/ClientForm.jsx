@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Save, AlertCircle, Bug, Mail, Lock, User } from 'lucide-react'
-import { getClient, createClient, updateClient } from '../../lib/firebase/queries.js'
+import { getClient, createClient, updateClient } from '../../lib/firebase/queries'
 import { Button } from '../../components/common/Button.jsx'
 import { Input, Textarea } from '../../components/common/Input.jsx'
 import { Spinner } from '../../components/common/Spinner.jsx'
@@ -78,9 +78,17 @@ export const ClientForm = () => {
       })
       setLastOperation({ type: 'LOAD', status: 'SUCCESS', message: `Cliente "${data.name}" carregado`, timestamp: new Date().toLocaleTimeString() })
     } catch (error) {
-      console.error('Error loading client:', error)
-      setLastOperation({ type: 'LOAD', status: 'ERROR', message: error.message, details: error.code, timestamp: new Date().toLocaleTimeString() })
-      alert('Erro ao carregar cliente')
+      console.error('❌ Error loading client:', error)
+      console.error('📋 Full error object:', JSON.stringify(error, null, 2))
+      setLastOperation({
+        type: 'LOAD',
+        status: 'ERROR',
+        message: error.message || 'Erro ao carregar cliente',
+        details: error.code || 'NO_CODE',
+        stack: error.stack,
+        timestamp: new Date().toLocaleTimeString()
+      })
+      alert(`Erro ao carregar cliente: ${error.message || error.code}`)
       navigate('/admin/clientes')
     } finally {
       setLoading(false)
@@ -158,20 +166,24 @@ export const ClientForm = () => {
       setTimeout(() => navigate('/admin/clientes'), 1500)
     } catch (error) {
       console.error('❌ Save error:', error)
-      console.error('📋 Error details:', JSON.stringify(error, null, 2))
+      console.error('📋 Full error object:', JSON.stringify(error, null, 2))
       const errorMsg = error?.code || error?.message || 'Erro desconhecido'
-      const details = error?.code ? `Código: ${error.code}` : ''
+      const details = error?.code ? `Código: ${error.code}` : `Mensagem: ${error.message}`
+      const stack = error.stack || undefined
       setLastOperation({
         type: 'SAVE',
         status: 'ERROR',
         message: errorMsg,
         details,
+        stack,
         timestamp: new Date().toLocaleTimeString()
       })
       alert(`❌ Erro ao salvar cliente: ${errorMsg}`)
       // Mostra erro específico de autenticação
       if (error?.code === 'permission-denied') {
         alert('🔴 ERRO DE PERMISSÃO: Verifique:\n1. Se você está logado\n2. Se as regras do Firebase permitem escrita\n3. Se sua sessão não expirou')
+      } else if (error?.code === 'unauthenticated') {
+        alert('🔴 ERRO DE AUTENTICAÇÃO: Sua sessão expirou. Faça login novamente.')
       }
       setError(`Erro: ${errorMsg}`)
     } finally {
@@ -283,115 +295,210 @@ export const ClientForm = () => {
                 <div><span className="text-slate-400">Detalhes:</span> <span className="text-yellow-300">{lastOperation.details}</span></div>
               )}
               <div><span className="text-slate-400">Horário:</span> <span className="text-slate-300">{lastOperation.timestamp}</span></div>
+              {lastOperation.stack && (
+                <div className="mt-2 pt-2 border-t border-red-700/50">
+                  <div className="text-slate-400 mb-1">Stack Trace:</div>
+                  <pre className="text-red-300 overflow-auto max-h-40 text-[10px] leading-tight whitespace-pre-wrap">
+                    {lastOperation.stack}
+                  </pre>
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Form */}
+      {/* Form - Premium Design com Fieldsets Organizados */}
       <div className="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="p-4 bg-red-900/30 border border-red-700 rounded-md flex items-start">
-              <AlertCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-red-400">{error}</p>
+            <div className="p-4 bg-red-900/30 border border-red-700 rounded-md flex items-start animate-fade-in">
+              <AlertCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" aria-hidden="true" />
+              <p className="text-sm text-red-400 font-medium">{error}</p>
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Nome */}
-            <div className="md:col-span-2">
-              <Input
-                label="Nome *"
-                value={client.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                placeholder="Nome completo ou empresa"
-                required
-              />
-            </div>
+          {/* 🔵 Dados Pessoais */}
+          <fieldset className="border border-slate-700 rounded-lg p-5 space-y-4 transition-all hover:border-teal-500/50">
+            <legend className="text-sm font-semibold text-teal-400 px-2 flex items-center">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Dados Pessoais
+            </legend>
 
-            {/* Email e Telefone */}
-            <div>
-              <Input
-                label="Email"
-                type="email"
-                value={client.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="email@exemplo.com"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+              {/* Nome (obrigatório, full width) */}
+              <div className="md:col-span-2">
+                <label htmlFor="client-name" className="block text-sm font-medium text-slate-300 mb-2">
+                  Nome / Empresa <span className="text-red-400" aria-label="obrigatório">*</span>
+                </label>
+                <input
+                  id="client-name"
+                  type="text"
+                  value={client.name}
+                  onChange={(e) => handleChange('name', e.target.value)}
+                  placeholder="Nome completo ou razão social"
+                  required
+                  aria-required="true"
+                  className="block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-0 sm:text-sm transition-all placeholder:text-slate-500"
+                />
+              </div>
 
-            <div>
-              <Input
-                label="Telefone"
-                value={client.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder="(00) 00000-0000"
-              />
-            </div>
+              {/* Email */}
+              <div>
+                <label htmlFor="client-email" className="block text-sm font-medium text-slate-300 mb-2">
+                  Email
+                </label>
+                <input
+                  id="client-email"
+                  type="email"
+                  value={client.email}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                  placeholder="email@exemplo.com"
+                  className="block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-0 sm:text-sm transition-all placeholder:text-slate-500"
+                />
+              </div>
 
-            {/* Endereço - Cidade */}
-            <div>
-              <Input
-                label="Cidade"
-                value={client.city}
-                onChange={(e) => handleChange('city', e.target.value)}
-                placeholder="Cidade"
-              />
+              {/* Telefone */}
+              <div>
+                <label htmlFor="client-phone" className="block text-sm font-medium text-slate-300 mb-2">
+                  Telefone
+                </label>
+                <input
+                  id="client-phone"
+                  type="tel"
+                  value={client.phone}
+                  onChange={(e) => handleChange('phone', e.target.value)}
+                  placeholder="(00) 00000-0000"
+                  className="block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-0 sm:text-sm transition-all placeholder:text-slate-500"
+                />
+              </div>
             </div>
+          </fieldset>
 
-            {/* Endereço - Bairro */}
-            <div>
-              <Input
-                label="Bairro"
-                value={client.neighborhood}
-                onChange={(e) => handleChange('neighborhood', e.target.value)}
-                placeholder="Bairro"
-              />
+          {/* 📍 Endereço */}
+          <fieldset className="border border-slate-700 rounded-lg p-5 space-y-4 transition-all hover:border-amber-500/50">
+            <legend className="text-sm font-semibold text-amber-400 px-2 flex items-center">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Endereço de Contato
+            </legend>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+              <p className="md:col-span-2 text-xs text-amber-300/70 flex items-center">
+                <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                Cidade e Rua são obrigatórios para cadastro completo
+              </p>
+
+              {/* Cidade (obrigatório) */}
+              <div>
+                <label htmlFor="client-city" className="block text-sm font-medium text-slate-300 mb-2">
+                  Cidade <span className="text-red-400" aria-label="obrigatório">*</span>
+                </label>
+                <input
+                  id="client-city"
+                  type="text"
+                  value={client.city}
+                  onChange={(e) => handleChange('city', e.target.value)}
+                  placeholder="Cidade"
+                  required
+                  aria-required="true"
+                  className="block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-0 sm:text-sm transition-all placeholder:text-slate-500"
+                />
+              </div>
+
+              {/* Bairro */}
+              <div>
+                <label htmlFor="client-neighborhood" className="block text-sm font-medium text-slate-300 mb-2">
+                  Bairro
+                </label>
+                <input
+                  id="client-neighborhood"
+                  type="text"
+                  value={client.neighborhood}
+                  onChange={(e) => handleChange('neighborhood', e.target.value)}
+                  placeholder="Bairro"
+                  className="block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-0 sm:text-sm transition-all placeholder:text-slate-500"
+                />
+              </div>
+
+              {/* Rua (obrigatório, full width) */}
+              <div className="md:col-span-2">
+                <label htmlFor="client-street" className="block text-sm font-medium text-slate-300 mb-2">
+                  Rua / Avenida <span className="text-red-400" aria-label="obrigatório">*</span>
+                </label>
+                <input
+                  id="client-street"
+                  type="text"
+                  value={client.street}
+                  onChange={(e) => handleChange('street', e.target.value)}
+                  placeholder="Nome da rua, avenida, etc."
+                  required
+                  aria-required="true"
+                  className="block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-0 sm:text-sm transition-all placeholder:text-slate-500"
+                />
+              </div>
+
+              {/* Número */}
+              <div>
+                <label htmlFor="client-number" className="block text-sm font-medium text-slate-300 mb-2">
+                  Número <span className="text-red-400" aria-label="obrigatório">*</span>
+                </label>
+                <input
+                  id="client-number"
+                  type="text"
+                  value={client.number}
+                  onChange={(e) => handleChange('number', e.target.value)}
+                  placeholder="123"
+                  required
+                  aria-required="true"
+                  className="block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-0 sm:text-sm transition-all placeholder:text-slate-500"
+                />
+              </div>
+
+              {/* Complemento */}
+              <div>
+                <label htmlFor="client-complement" className="block text-sm font-medium text-slate-300 mb-2">
+                  Complemento
+                </label>
+                <input
+                  id="client-complement"
+                  type="text"
+                  value={client.complement}
+                  onChange={(e) => handleChange('complement', e.target.value)}
+                  placeholder="Apto, bloco, sala, etc. (opcional)"
+                  className="block w-full rounded-md border-slate-600 bg-slate-700 text-slate-100 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-0 sm:text-sm transition-all placeholder:text-slate-500"
+                />
+              </div>
             </div>
+          </fieldset>
 
-            {/* Endereço - Rua */}
-            <div className="md:col-span-2">
-              <Input
-                label="Rua"
-                value={client.street}
-                onChange={(e) => handleChange('street', e.target.value)}
-                placeholder="Nome da rua, avenida, etc."
-              />
-            </div>
-
-            {/* Endereço - Número e Complemento */}
-            <div>
-              <Input
-                label="Número"
-                value={client.number}
-                onChange={(e) => handleChange('number', e.target.value)}
-                placeholder="123"
-              />
-            </div>
-
-            <div>
-              <Input
-                label="Complemento (opcional)"
-                value={client.complement}
-                onChange={(e) => handleChange('complement', e.target.value)}
-                placeholder="Apto, bloco, etc."
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
+          {/* Botões */}
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-700">
             <Button
               type="button"
               variant="secondary"
               onClick={() => navigate('/admin/clientes')}
               disabled={saving}
+              className="w-full sm:w-auto order-2 sm:order-none"
             >
+              <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
               Cancelar
             </Button>
-            <Button type="submit" loading={saving}>
-              <Save className="mr-2 h-4 w-4" />
-              {isEditing ? 'Atualizar' : 'Criar'}
+            <Button
+              type="submit"
+              loading={saving}
+              className="w-full sm:w-auto order-1 sm:order-none"
+            >
+              <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+              {isEditing ? 'Atualizar Cliente' : 'Criar Cliente'}
             </Button>
           </div>
         </form>

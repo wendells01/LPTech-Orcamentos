@@ -1,8 +1,14 @@
 import React from 'react'
 import { Select, Textarea, Input } from '../../../components/common/Input.jsx'
-import { QUOTE_STATUS, STATUS_OPTIONS } from '../../../lib/constants/quoteStatus.js'
+import { QUOTE_STATUS, STATUS_OPTIONS } from '../../../lib/constants/quoteStatus'
 
 export const QuoteInfoForm = ({ quote, clients, onChange }) => {
+  console.log('🔍 QuoteInfoForm renderizando:', {
+    clientsCount: clients.length,
+    clients,
+    selectedClientId: quote.client_id
+  })
+
   return (
     <div className="bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-700">
       <h2 className="text-lg font-semibold text-white mb-4 flex items-center">

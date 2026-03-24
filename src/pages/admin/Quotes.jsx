@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Eye, Trash2, FileText } from 'lucide-react'
-import { getQuotes, deleteQuote, getClients } from '../../lib/firebase/queries.js'
+import { getQuotes, deleteQuote, getClients } from '../../lib/firebase/queries'
 import { QUOTE_STATUS } from '../../lib/constants/quoteStatus.js'
 import { formatCurrency, formatDate, truncateText } from '../../lib/utils/formatters.js'
 import { Button } from '../../components/common/Button.jsx'
