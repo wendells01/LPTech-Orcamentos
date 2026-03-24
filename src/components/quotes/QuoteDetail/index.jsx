@@ -112,17 +112,33 @@ export const QuoteDetail = () => {
           <div className="flex mb-4">
             <button
               onClick={() => setShowServiceSelector(true)}
-              className="flex-1 mr-2 bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-4 rounded"
+              disabled={services.length === 0}
+              className={`flex-1 mr-2 ${services.length === 0 ? 'bg-slate-700 cursor-not-allowed opacity-60' : 'bg-teal-600 hover:bg-teal-700'} text-white font-medium py-2 px-4 rounded transition-colors`}
+              title={services.length === 0 ? 'Cadastre pelo menos um serviço primeiro' : 'Adicionar Serviço'}
             >
               + Adicionar Serviço
             </button>
             <button
               onClick={() => setShowMaterialSelector(true)}
-              className="flex-1 ml-2 bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded"
+              disabled={materials.length === 0}
+              className={`flex-1 ml-2 ${materials.length === 0 ? 'bg-slate-700 cursor-not-allowed opacity-60' : 'bg-amber-600 hover:bg-amber-700'} text-white font-medium py-2 px-4 rounded transition-colors`}
+              title={materials.length === 0 ? 'Cadastre pelo menos um material primeiro' : 'Adicionar Material'}
             >
               + Adicionar Material
             </button>
           </div>
+
+          {/* Warning messages for missing services/materials */}
+          {services.length === 0 && (
+            <div className="mb-4 p-3 bg-amber-500/20 border border-amber-500/50 rounded text-amber-400 text-sm">
+              ⚠️ Nenhum serviço cadastrado. Cadastre serviços em <Link to="/admin/servicos" className="underline text-amber-300 hover:text-amber-200">Serviços</Link> antes de criar orçamentos.
+            </div>
+          )}
+          {materials.length === 0 && (
+            <div className="mb-4 p-3 bg-amber-500/20 border border-amber-500/50 rounded text-amber-400 text-sm">
+              ⚠️ Nenhum material cadastrado. Cadastre materiais em <Link to="/admin/materiais" className="underline text-amber-300 hover:text-amber-200">Materiais</Link> antes de criar orçamentos.
+            </div>
+          )}
 
           <QuoteItemsSection
             title="Materiais"

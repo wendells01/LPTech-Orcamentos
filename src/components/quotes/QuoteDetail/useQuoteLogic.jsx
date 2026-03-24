@@ -11,7 +11,7 @@ import {
   getServices,
   getMaterials
 } from '../../../lib/firebase/queries.js'
-import { formatCurrency, calculateTotal } from '../../../lib/utils/formatters.js'
+import { calculateTotal } from '../../../lib/utils/formatters.js'
 
 export const useQuoteLogic = () => {
   const { id } = useParams()
@@ -44,7 +44,7 @@ export const useQuoteLogic = () => {
     total: 0,
   })
 
-  // Quote items
+  // Quote items (all items that will be saved: existing + pending)
   const [items, setItems] = useState([])
 
   // Selection modal state
@@ -74,6 +74,11 @@ export const useQuoteLogic = () => {
         navigate('/admin/orcamentos')
         return
       }
+      // Ensure items have total calculated if missing
+      const itemsWithTotal = (data.items || []).map(item => ({
+        ...item,
+        total: item.total !== undefined ? Number(item.total) : Number(item.quantity) * Number(item.unit_price)
+      }))
       setQuote({
         quote_number: data.quote_number,
         client_id: data.client_id || '',
@@ -87,7 +92,7 @@ export const useQuoteLogic = () => {
         subtotal_materials: Number(data.subtotal_materials) || 0,
         total: Number(data.total) || 0,
       })
-      setItems(data.items || [])
+      setItems(itemsWithTotal)
     } catch (error) {
       console.error('Error:', error)
       alert('Erro ao carregar orçamento')
@@ -124,13 +129,19 @@ export const useQuoteLogic = () => {
     }
   }
 
-  // Calculated totals
+  // Calculated totals - now based on all items (including pending)
   const calculatedServices = useMemo(() => {
-    return items.filter(i => i.type === 'service').reduce((sum, i) => sum + Number(i.total), 0)
+    return items.filter(i => i.type === 'service').reduce((sum, i) => {
+      const total = i.total !== undefined ? Number(i.total) : Number(i.quantity) * Number(i.unit_price)
+      return sum + total
+    }, 0)
   }, [items])
 
   const calculatedMaterials = useMemo(() => {
-    return items.filter(i => i.type === 'material').reduce((sum, i) => sum + Number(i.total), 0)
+    return items.filter(i => i.type === 'material').reduce((sum, i) => {
+      const total = i.total !== undefined ? Number(i.total) : Number(i.quantity) * Number(i.unit_price)
+      return sum + total
+    }, 0)
   }, [items])
 
   const calculatedTotal = useMemo(() => {
@@ -162,46 +173,8 @@ export const useQuoteLogic = () => {
     setQuote(prev => ({ ...prev, [field]: value }))
   }
 
-  // Generic function to add items (services or materials)
-  const addItems = async (type, itemsToAdd, createFunction) => {
-    if (itemsToAdd.length === 0) return
-
-    try {
-      for (const item of itemsToAdd) {
-        if (isNew) {
-          if (!quote.id) {
-            const newQuote = await createQuote({
-              client_id: quote.client_id,
-              description: quote.description,
-              status: quote.status,
-              issue_date: quote.issue_date,
-              valid_until: quote.valid_until || null,
-              discount: quote.discount,
-              notes: quote.notes,
-            })
-            setQuote(prev => ({ ...prev, id: newQuote.id, quote_number: newQuote.quote_number }))
-          }
-
-          const { data } = await createQuoteItem(quote.id, {
-            ...item,
-            total: item.quantity * item.unit_price,
-          })
-          setItems(prev => [...prev, data])
-        } else {
-          const { data } = await createQuoteItem(id, {
-            ...item,
-            total: item.quantity * item.unit_price,
-          })
-          setItems(prev => [...prev, data])
-        }
-      }
-    } catch (error) {
-      throw error
-    }
-  }
-
+  // Add services/materials to local state (without saving to Firebase yet)
   const handleAddServices = async () => {
-    // Validação: cliente obrigatório
     if (!quote.client_id) {
       alert('Selecione um cliente antes de adicionar serviços')
       return
@@ -213,7 +186,8 @@ export const useQuoteLogic = () => {
       quantity: 1,
       unit_price: Number(s.unit_price),
       unit: s.unit || '',
-      service_id: s.id
+      service_id: s.id,
+      total: Number(s.unit_price) * 1
     }))
 
     if (servicesToAdd.length === 0) {
@@ -221,18 +195,14 @@ export const useQuoteLogic = () => {
       return
     }
 
-    try {
-      await addItems('service', servicesToAdd, createQuoteItem)
-      setShowServiceSelector(false)
-      setSelectedServices([])
-      setServiceSearch('')
-    } catch (error) {
-      alert(`Erro ao adicionar serviços: ${error.message}`)
-    }
+    // Add to local state only (no Firebase save yet)
+    setItems(prev => [...prev, ...servicesToAdd])
+    setShowServiceSelector(false)
+    setSelectedServices([])
+    setServiceSearch('')
   }
 
   const handleAddMaterials = async () => {
-    // Validação: cliente obrigatório
     if (!quote.client_id) {
       alert('Selecione um cliente antes de adicionar materiais')
       return
@@ -244,7 +214,8 @@ export const useQuoteLogic = () => {
       quantity: 1,
       unit_price: Number(m.unit_price),
       unit: m.unit || '',
-      material_id: m.id
+      material_id: m.id,
+      total: Number(m.unit_price) * 1
     }))
 
     if (materialsToAdd.length === 0) {
@@ -252,14 +223,11 @@ export const useQuoteLogic = () => {
       return
     }
 
-    try {
-      await addItems('material', materialsToAdd, createQuoteItem)
-      setShowMaterialSelector(false)
-      setSelectedMaterials([])
-      setMaterialSearch('')
-    } catch (error) {
-      alert(`Erro ao adicionar materiais: ${error.message}`)
-    }
+    // Add to local state only (no Firebase save yet)
+    setItems(prev => [...prev, ...materialsToAdd])
+    setShowMaterialSelector(false)
+    setSelectedMaterials([])
+    setMaterialSearch('')
   }
 
   const handleUpdateItem = async (itemId, field, value) => {
@@ -291,7 +259,11 @@ export const useQuoteLogic = () => {
         updates.total = quantity * unitPrice
       }
 
-      await updateQuoteItem(isNew ? quote.id : id, itemId, updates)
+      // Only save to Firebase if item already exists (has id)
+      if (itemId) {
+        await updateQuoteItem(isNew ? quote.id : id, itemId, updates)
+      }
+      // If item has no id (pending), it will be saved when handleSaveQuote is called
     } catch (error) {
       alert(`Erro ao atualizar item: ${error.message}`)
       // Rollback: restaurar estado anterior
@@ -311,7 +283,11 @@ export const useQuoteLogic = () => {
     setItems(prev => prev.filter(item => item.id !== itemId))
 
     try {
-      await deleteQuoteItem(isNew ? quote.id : id, itemId)
+      // Only delete from Firebase if item already exists (has id)
+      if (itemId) {
+        await deleteQuoteItem(isNew ? quote.id : id, itemId)
+      }
+      // If item has no id (pending), it's already removed from local state
     } catch (error) {
       alert(`Erro ao excluir item: ${error.message}`)
       // Rollback: restaurar item na UI
@@ -346,21 +322,37 @@ export const useQuoteLogic = () => {
 
     setSaving(true)
     try {
+      // Prepare items for saving (ensure total is calculated)
+      const itemsToSave = items.map(item => ({
+        type: item.type,
+        description: item.description,
+        quantity: Number(item.quantity),
+        unit_price: Number(item.unit_price),
+        unit: item.unit || '',
+        total: Number(item.total !== undefined ? item.total : item.quantity * item.unit_price),
+        ...(item.type === 'service' && { service_id: item.service_id }),
+        ...(item.type === 'material' && { material_id: item.material_id }),
+      }))
+
       if (isNew) {
-        if (!quote.id) {
-          const data = await createQuote({
-            client_id: quote.client_id,
-            description: quote.description,
-            status: quote.status,
-            issue_date: quote.issue_date,
-            valid_until: quote.valid_until || null,
-            discount: quote.discount,
-            notes: quote.notes,
-          })
-          setQuote(prev => ({ ...prev, id: data.id, quote_number: data.quote_number }))
-          alert(`Orçamento ${data.quote_number} criado com sucesso!`)
-        }
+        // Create new quote with all items at once
+        const data = await createQuote({
+          client_id: quote.client_id,
+          description: quote.description,
+          status: quote.status,
+          issue_date: quote.issue_date,
+          valid_until: quote.valid_until || null,
+          discount: quote.discount,
+          notes: quote.notes,
+          items: itemsToSave
+        })
+        setQuote(prev => ({ ...prev, id: data.id, quote_number: data.quote_number }))
+        setItems([]) // Clear local items as they are now saved
+        alert(`Orçamento ${data.quote_number} criado com sucesso!`)
+        // Redirect to quotes list after short delay
+        setTimeout(() => navigate('/admin/orcamentos'), 1000)
       } else {
+        // Update existing quote with all items (replace all)
         await updateQuote(id, {
           client_id: quote.client_id,
           description: quote.description,
@@ -369,7 +361,9 @@ export const useQuoteLogic = () => {
           valid_until: quote.valid_until || null,
           discount: quote.discount,
           notes: quote.notes,
+          items: itemsToSave
         })
+        setItems([]) // Clear pending changes
         alert('Orçamento salvo com sucesso!')
       }
     } catch (error) {

@@ -9,6 +9,12 @@ export const QuoteInfoForm = ({ quote, clients, onChange }) => {
         Dados do Orçamento
       </h2>
 
+      {clients.length === 0 && (
+        <div className="mb-4 p-3 bg-amber-500/20 border border-amber-500/50 rounded text-amber-400 text-sm">
+          ⚠️ Nenhum cliente cadastrado. Cadastre pelo menos um cliente antes de criar orçamentos.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <Select
@@ -16,8 +22,11 @@ export const QuoteInfoForm = ({ quote, clients, onChange }) => {
             value={quote.client_id}
             onChange={(e) => onChange('client_id', e.target.value)}
             error={!quote.client_id && 'Cliente é obrigatório'}
+            disabled={clients.length === 0}
           >
-            <option value="">Selecione um cliente</option>
+            <option value="">
+              {clients.length === 0 ? 'Nenhum cliente disponível' : 'Selecione um cliente'}
+            </option>
             {clients.map(client => (
               <option key={client.id} value={client.id}>
                 {client.company_name || client.name} {client.email && `(${client.email})`}
