@@ -72,19 +72,29 @@ export const ClientForm = () => {
       return
     }
 
+    // Validação adicional: pelo menos cidade e rua para endereço completo
+    if (!client.city.trim() || !client.street.trim()) {
+      setError('Cidade e Rua são obrigatórios para o endereço')
+      return
+    }
+
     setSaving(true)
     try {
+      console.log('Attempting to save client:', client) // DEBUG
       if (isEditing) {
-        await updateClient(id, client)
+        const result = await updateClient(id, client)
+        console.log('Update result:', result)
         alert('Cliente atualizado com sucesso!')
       } else {
-        await createClient(client)
-        alert('Cliente criado com sucesso!')
+        const result = await createClient(client)
+        console.log('Create result:', result)
+        alert(`Cliente "${client.name}" criado com sucesso!`)
       }
       navigate('/admin/clientes')
     } catch (error) {
       console.error('Save error:', error)
-      alert(`Erro ao salvar cliente: ${error.message}`)
+      console.error('Error details:', JSON.stringify(error, null, 2))
+      alert(`Erro ao salvar cliente: ${error.code || error.message || 'Erro desconhecido'}`)
     } finally {
       setSaving(false)
     }
