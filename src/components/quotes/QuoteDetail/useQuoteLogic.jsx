@@ -152,11 +152,7 @@ export const useQuoteLogic = () => {
   const loadQuote = async () => {
     addDebugLog('INFO', 'Carregando orçamento', { id })
     try {
-      // Timeout de 10s para loadQuote
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout ao carregar orçamento')), 10000)
-      )
-      const data = await Promise.race([getQuote(id), timeoutPromise])
+      const data = await getQuote(id)
       addDebugLog('DATA', 'Dados recebidos', data)
 
       if (!data) {
@@ -203,18 +199,10 @@ export const useQuoteLogic = () => {
       console.error('❌ loadClients: Usuário NÃO autenticado!')
       throw new Error('Usuário não autenticado')
     }
-    // Timeout de 10s para esta operação específica
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout ao carregar clientes')), 10000)
-    )
-    const loadPromise = getClients()
-    return Promise.race([loadPromise, timeoutPromise])
-      .then(result => {
-        const { data: clientsData } = result
-        console.log('🔍 useQuoteLogic: Clientes carregados:', clientsData?.length || 0, 'clientes')
-        setClients(clientsData || [])
-        return clientsData
-      })
+    const result = await getClients()
+    console.log('🔍 useQuoteLogic: Clientes carregados:', result?.data?.length || 0, 'clientes')
+    setClients(result.data || [])
+    return result.data
   }
 
   const loadServices = async () => {
@@ -223,18 +211,10 @@ export const useQuoteLogic = () => {
       console.error('❌ loadServices: Usuário NÃO autenticado!')
       throw new Error('Usuário não autenticado')
     }
-    // Timeout de 10s para esta operação específica
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout ao carregar serviços')), 10000)
-    )
-    const loadPromise = getServices()
-    return Promise.race([loadPromise, timeoutPromise])
-      .then(result => {
-        const { data: servicesData } = result
-        console.log('🔍 useQuoteLogic: Serviços carregados:', servicesData?.length || 0)
-        setServices(servicesData || [])
-        return servicesData
-      })
+    const result = await getServices()
+    console.log('🔍 useQuoteLogic: Serviços carregados:', result?.data?.length || 0)
+    setServices(result.data || [])
+    return result.data
   }
 
   const loadMaterials = async () => {
@@ -243,18 +223,10 @@ export const useQuoteLogic = () => {
       console.error('❌ loadMaterials: Usuário NÃO autenticado!')
       throw new Error('Usuário não autenticado')
     }
-    // Timeout de 10s para esta operação específica
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout ao carregar materiais')), 10000)
-    )
-    const loadPromise = getMaterials()
-    return Promise.race([loadPromise, timeoutPromise])
-      .then(result => {
-        const { data: materialsData } = result
-        console.log('🔍 useQuoteLogic: Materiais carregados:', materialsData?.length || 0)
-        setMaterials(materialsData || [])
-        return materialsData
-      })
+    const result = await getMaterials()
+    console.log('🔍 useQuoteLogic: Materiais carregados:', result?.data?.length || 0)
+    setMaterials(result.data || [])
+    return result.data
   }
 
   // Calculated totals - now based on all items (including pending)

@@ -7,14 +7,6 @@ import { Input, Textarea } from '../../components/common/Input.jsx'
 import { Spinner } from '../../components/common/Spinner.jsx'
 import { useAuth } from '../../hooks/useAuth.jsx'
 
-// Helper: Promise with timeout
-const withTimeout = (promise, ms, message) => {
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error(message || 'Timeout')), ms)
-  )
-  return Promise.race([promise, timeout])
-}
-
 export const ClientForm = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -149,12 +141,7 @@ export const ClientForm = () => {
         timestamp: new Date().toLocaleTimeString()
       })
 
-      // Add 30 second timeout to prevent hanging indefinitely
-      const savePromise = isEditing
-        ? updateClient(id, client)
-        : createClient(client)
-
-      const result = await withTimeout(savePromise, 30000, 'Operação excedeu o tempo limite (30s)')
+      const result = await (isEditing ? updateClient(id, client) : createClient(client))
       console.log('✅ Save result:', result)
 
       if (isEditing) {
