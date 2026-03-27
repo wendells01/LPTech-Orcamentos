@@ -141,7 +141,11 @@ export const ClientForm = () => {
         timestamp: new Date().toLocaleTimeString()
       })
 
-      const result = await (isEditing ? updateClient(id, client) : createClient(client))
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+      const result = await (isEditing ? updateClient(id, client, controller.signal) : createClient(client, controller.signal))
+      clearTimeout(timeoutId);
       console.log('✅ Save result:', result)
 
       if (isEditing) {

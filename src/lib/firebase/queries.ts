@@ -26,12 +26,25 @@ const snapshotToArray = (snapshot) => {
   }));
 };
 
+// Helper: Execute promise with timeout
+const withTimeout = (promise, ms = 30000, operation = 'operation') => {
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms)
+  );
+  return Promise.race([promise, timeoutPromise]).catch(error => {
+    if (error.message.includes('Timeout')) {
+      throw new Error(`Timeout em ${operation}. Verifique sua conexão e tente novamente.`);
+    }
+    throw error;
+  });
+};
+
 // ============================================
 // CLIENTS COLLECTION OPERATIONS
 // ============================================
 
-export const getClients = async (limit, startAfter, signal) => {
-  console.log('🔍 getClients called', { limit, startAfter: startAfter?.id, signal: !!signal });
+export const getClients = async (limit, startAfter) => {
+  console.log('🔍 getClients called', { limit, startAfter: startAfter?.id });
   if (!db) {
     console.error('❌ getClients: Firestore database (db) is not initialized');
     throw new Error('Database not initialized. Please check Firebase configuration.');
@@ -45,17 +58,7 @@ export const getClients = async (limit, startAfter, signal) => {
       constraints.push(startAfter(startAfter));
     }
     const q = query(collection(db, 'quote_clients'), ...constraints);
-
-    // Add timeout via AbortController if signal provided
-    let controller
-    if (!signal) {
-      controller = new AbortController()
-      signal = controller.signal
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s
-      signal.addEventListener('abort', () => clearTimeout(timeoutId), { once: true })
-    }
-
-    const snapshot = await getDocs(q, { signal });
+    const snapshot = await withTimeout(getDocs(q), 30000, 'carregar clientes');
     const result = {
       data: snapshotToArray(snapshot),
       lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
@@ -87,7 +90,7 @@ export const getClient = async (id) => {
   }
 };
 
-export const createClient = async (client) => {
+export const createClient = async (client, signal) => {
   console.log('🚀 createClient START', {
     name: client.name,
     email: client.email,
@@ -100,10 +103,19 @@ export const createClient = async (client) => {
   }
   try {
     console.log('🔧 createClient: calling addDoc...');
+    // Add timeout if no signal provided
+    let controller;
+    if (!signal) {
+      controller = new AbortController();
+      signal = controller.signal;
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+      signal.addEventListener('abort', () => clearTimeout(timeoutId), { once: true });
+    }
+
     const docRef = await addDoc(collection(db, 'quote_clients'), {
       ...client,
       createdAt: serverTimestamp(),
-    });
+    }, { signal });
     const result = { id: docRef.id, ...client };
     console.log('✅ createClient SUCCESS', {
       id: docRef.id,
@@ -117,42 +129,69 @@ export const createClient = async (client) => {
       stack: error?.stack,
       timestamp: Date.now()
     });
+    if (error.name === 'AbortError') {
+      throw new Error('Timeout ao salvar cliente. Verifique sua conexão e tente novamente.');
+    }
     throw error;
   }
 };
 
-export const updateClient = async (id, client) => {
+export const updateClient = async (id, client, signal) => {
   console.log('🔄 updateClient called for id:', id, 'with:', { name: client.name });
   if (!db) {
     console.error('❌ updateClient: Firestore database (db) is not initialized');
     throw new Error('Database not initialized. Please check Firebase configuration.');
   }
   try {
+    // Add timeout via AbortController if signal provided
+    let controller;
+    if (!signal) {
+      controller = new AbortController();
+      signal = controller.signal;
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s
+      signal.addEventListener('abort', () => clearTimeout(timeoutId), { once: true });
+    }
+
     const clientRef = doc(db, 'quote_clients', id);
     await updateDoc(clientRef, {
       ...client,
       updatedAt: serverTimestamp(),
-    });
+    }, { signal });
     const result = { id, ...client };
     console.log('✅ updateClient SUCCESS:', result);
     return result;
   } catch (error) {
     console.error('❌ updateClient FAILED:', error.code || error.message, error);
+    if (error.name === 'AbortError') {
+      throw new Error('Timeout ao atualizar cliente. Verifique sua conexão.');
+    }
     throw error;
   }
 };
 
-export const deleteClient = async (id) => {
+export const deleteClient = async (id, signal) => {
   console.log('🗑️ deleteClient called for id:', id);
   if (!db) {
     console.error('❌ deleteClient: Firestore database (db) is not initialized');
     throw new Error('Database not initialized. Please check Firebase configuration.');
   }
   try {
-    await deleteDoc(doc(db, 'quote_clients', id));
+    // Add timeout via AbortController if signal provided
+    let controller;
+    if (!signal) {
+      controller = new AbortController();
+      signal = controller.signal;
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s
+      signal.addEventListener('abort', () => clearTimeout(timeoutId), { once: true });
+    }
+
+    await deleteDoc(doc(db, 'quote_clients', id), { signal });
     console.log('✅ deleteClient SUCCESS');
   } catch (error) {
     console.error('❌ deleteClient FAILED:', error.code || error.message, error);
+    if (error.name === 'AbortError') {
+      throw new Error('Timeout ao excluir cliente. Verifique sua conexão.');
+    }
     throw error;
   }
 };
@@ -176,7 +215,7 @@ export const getServices = async (limit, startAfter) => {
       constraints.push(startAfter(startAfter));
     }
     const q = query(collection(db, 'services'), ...constraints);
-    const snapshot = await getDocs(q);
+    const snapshot = await withTimeout(getDocs(q), 30000, 'carregar serviços');
     const result = {
       data: snapshotToArray(snapshot),
       lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
@@ -198,7 +237,7 @@ export const getService = async (id) => {
   }
   try {
     const docRef = doc(db, 'services', id);
-    const snapshot = await getDoc(docRef);
+    const snapshot = await withTimeout(getDoc(docRef), 30000, 'carregar serviço');
     const result = snapshot.exists ? { id: docRef.id, ...snapshot.data() } : null;
     return result;
   } catch (error) {
@@ -214,11 +253,15 @@ export const createService = async (service) => {
     throw new Error('Database not initialized. Please check Firebase configuration.');
   }
   try {
-    const docRef = await addDoc(collection(db, 'services'), {
-      ...service,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    const docRef = await withTimeout(
+      addDoc(collection(db, 'services'), {
+        ...service,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }),
+      30000,
+      'criar serviço'
+    );
     const result = { id: docRef.id, ...service };
     console.log('✅ createService SUCCESS:', result);
     return result;
@@ -236,10 +279,10 @@ export const updateService = async (id, service) => {
   }
   try {
     const serviceRef = doc(db, 'services', id);
-    await updateDoc(serviceRef, {
+    await withTimeout(updateDoc(serviceRef, {
       ...service,
       updatedAt: serverTimestamp(),
-    });
+    }), 30000, 'atualizar serviço');
     const result = { id, ...service };
     console.log('✅ updateService SUCCESS:', result);
     return result;
@@ -256,7 +299,7 @@ export const deleteService = async (id) => {
     throw new Error('Database not initialized. Please check Firebase configuration.');
   }
   try {
-    await deleteDoc(doc(db, 'services', id));
+    await withTimeout(deleteDoc(doc(db, 'services', id)), 30000, 'excluir serviço');
     console.log('✅ deleteService SUCCESS');
   } catch (error) {
     console.error('❌ deleteService FAILED:', error.code || error.message, error);
@@ -283,7 +326,7 @@ export const getMaterials = async (limit, startAfter) => {
       constraints.push(startAfter(startAfter));
     }
     const q = query(collection(db, 'materials'), ...constraints);
-    const snapshot = await getDocs(q);
+    const snapshot = await withTimeout(getDocs(q), 30000, 'carregar materiais');
     const result = {
       data: snapshotToArray(snapshot),
       lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
@@ -305,7 +348,7 @@ export const getMaterial = async (id) => {
   }
   try {
     const docRef = doc(db, 'materials', id);
-    const snapshot = await getDoc(docRef);
+    const snapshot = await withTimeout(getDoc(docRef), 30000, 'carregar material');
     const result = snapshot.exists ? { id: docRef.id, ...snapshot.data() } : null;
     return result;
   } catch (error) {
@@ -321,11 +364,15 @@ export const createMaterial = async (material) => {
     throw new Error('Database not initialized. Please check Firebase configuration.');
   }
   try {
-    const docRef = await addDoc(collection(db, 'materials'), {
-      ...material,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    const docRef = await withTimeout(
+      addDoc(collection(db, 'materials'), {
+        ...material,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }),
+      30000,
+      'criar material'
+    );
     const result = { id: docRef.id, ...material };
     console.log('✅ createMaterial SUCCESS:', result);
     return result;
@@ -343,10 +390,10 @@ export const updateMaterial = async (id, material) => {
   }
   try {
     const materialRef = doc(db, 'materials', id);
-    await updateDoc(materialRef, {
+    await withTimeout(updateDoc(materialRef, {
       ...material,
       updatedAt: serverTimestamp(),
-    });
+    }), 30000, 'atualizar material');
     const result = { id, ...material };
     console.log('✅ updateMaterial SUCCESS:', result);
     return result;
@@ -363,7 +410,7 @@ export const deleteMaterial = async (id) => {
     throw new Error('Database not initialized. Please check Firebase configuration.');
   }
   try {
-    await deleteDoc(doc(db, 'materials', id));
+    await withTimeout(deleteDoc(doc(db, 'materials', id)), 30000, 'excluir material');
     console.log('✅ deleteMaterial SUCCESS');
   } catch (error) {
     console.error('❌ deleteMaterial FAILED:', error.code || error.message, error);
@@ -386,7 +433,7 @@ export const getQuoteItems = async (quoteId) => {
       orderBy('display_order'),
       orderBy('createdAt')
     );
-    const snapshot = await getDocs(q);
+    const snapshot = await withTimeout(getDocs(q), 30000, 'carregar itens do orçamento');
     const result = snapshotToArray(snapshot);
     return result;
   } catch (error) {
@@ -401,10 +448,14 @@ export const createQuoteItem = async (quoteId, item) => {
     throw new Error('Database not initialized. Please check Firebase configuration.');
   }
   try {
-    const docRef = await addDoc(collection(db, 'quotes', quoteId, 'items'), {
-      ...item,
-      createdAt: serverTimestamp(),
-    });
+    const docRef = await withTimeout(
+      addDoc(collection(db, 'quotes', quoteId, 'items'), {
+        ...item,
+        createdAt: serverTimestamp(),
+      }),
+      30000,
+      'criar item de orçamento'
+    );
     return { id: docRef.id, ...item };
   } catch (error) {
     console.error('❌ createQuoteItem error:', error);
@@ -419,7 +470,7 @@ export const updateQuoteItem = async (quoteId, itemId, item) => {
   }
   try {
     const itemRef = doc(db, 'quotes', quoteId, 'items', itemId);
-    await updateDoc(itemRef, item);
+    await withTimeout(updateDoc(itemRef, item), 30000, 'atualizar item de orçamento');
     console.log('✅ updateQuoteItem success');
   } catch (error) {
     console.error('❌ updateQuoteItem error:', error);
@@ -433,7 +484,7 @@ export const deleteQuoteItem = async (quoteId, itemId) => {
     throw new Error('Database not initialized. Please check Firebase configuration.');
   }
   try {
-    await deleteDoc(doc(db, 'quotes', quoteId, 'items', itemId));
+    await withTimeout(deleteDoc(doc(db, 'quotes', quoteId, 'items', itemId)), 30000, 'excluir item de orçamento');
     console.log('✅ deleteQuoteItem success');
   } catch (error) {
     console.error('❌ deleteQuoteItem error:', error);
@@ -475,7 +526,7 @@ export const getQuotes = async (filters = {}, limit, startAfter) => {
     }
 
     const q = query(collection(db, 'quotes'), ...baseQueryConstraints);
-    const snapshot = await getDocs(q);
+    const snapshot = await withTimeout(getDocs(q), 30000, 'carregar orçamentos');
     let quotes = snapshotToArray(snapshot);
 
     // Client-side filtering for search
@@ -508,7 +559,7 @@ export const getQuote = async (id) => {
     const quoteRef = doc(db, 'quotes', id);
     console.log('🔍 getQuote: Document reference created:', quoteRef.path);
 
-    const quoteSnap = await getDoc(quoteRef);
+    const quoteSnap = await withTimeout(getDoc(quoteRef), 30000, 'carregar orçamento');
     console.log('🔍 getQuote: Document snapshot exists:', quoteSnap.exists());
 
     if (!quoteSnap.exists()) {
@@ -551,12 +602,16 @@ export const createQuote = async (quoteData) => {
   try {
     const quoteNumber = generateQuoteNumber();
 
-    const docRef = await addDoc(collection(db, 'quotes'), {
-      ...quoteData,
-      quote_number: quoteNumber,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    const docRef = await withTimeout(
+      addDoc(collection(db, 'quotes'), {
+        ...quoteData,
+        quote_number: quoteNumber,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }),
+      30000,
+      'criar orçamento'
+    );
 
     console.log('✅ Quote doc created with ID:', docRef.id);
 
@@ -571,7 +626,7 @@ export const createQuote = async (quoteData) => {
           createdAt: serverTimestamp(),
         });
       });
-      await batch.commit();
+      await withTimeout(batch.commit(), 30000, 'salvar itens do orçamento');
       console.log('✅ Quote items batch created:', quoteData.items.length, 'items');
     }
 
@@ -593,10 +648,10 @@ export const updateQuote = async (id, quoteData) => {
   try {
     const quoteRef = doc(db, 'quotes', id);
 
-    await updateDoc(quoteRef, {
+    await withTimeout(updateDoc(quoteRef, {
       ...quoteData,
       updatedAt: serverTimestamp(),
-    });
+    }), 30000, 'atualizar orçamento');
     console.log('✅ Quote doc updated');
 
     // Update items in subcollection: delete existing and create new ones
@@ -622,7 +677,7 @@ export const updateQuote = async (id, quoteData) => {
         });
       });
 
-      await batch.commit();
+      await withTimeout(batch.commit(), 30000, 'salvar itens do orçamento');
       console.log('✅ Quote items batch updated:', quoteData.items.length, 'items');
     }
 
@@ -649,11 +704,11 @@ export const deleteQuote = async (id) => {
       batch.delete(itemRef);
     });
 
-    await batch.commit();
+    await withTimeout(batch.commit(), 30000, 'excluir itens do orçamento');
     console.log('✅ Quote items deleted');
 
     // Delete the quote
-    await deleteDoc(doc(db, 'quotes', id));
+    await withTimeout(deleteDoc(doc(db, 'quotes', id)), 30000, 'excluir orçamento');
     console.log('✅ deleteQuote COMPLETE');
   } catch (error) {
     console.error('❌ deleteQuote FAILED:', error.code || error.message, error);
